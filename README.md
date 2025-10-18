@@ -24,8 +24,8 @@ Un dashboard open-source per monitorare, proteggere e ottimizzare le tue posizio
 
 1. **Clone la repository**
 ```bash
-git clone https://github.com/ddanielesmz/Aave-optimizer.git
-cd Aave-optimizer
+git clone https://github.com/ddanielesmz/aave-optimizer.git
+cd aave-optimizer
 ```
 
 2. **Installa le dipendenze**
