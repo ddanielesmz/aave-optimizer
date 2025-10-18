@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAccount, useChainId } from "wagmi";
 import { formatUnits } from "viem";
 import InfoButton from "@/components/InfoButton";
+import AlertSettings from "@/components/AlertSettings";
 
 // Hook per gestire il mounting e evitare hydration mismatch
 function useIsClient() {
@@ -280,6 +281,11 @@ export default function NetAPYCard({
               </div>
             `}
             size="xs"
+          />
+          <AlertSettings
+            widgetType="netAPY"
+            currentValue={netAPY}
+            widgetName="Net APY"
           />
         </div>
         {onRefresh && (

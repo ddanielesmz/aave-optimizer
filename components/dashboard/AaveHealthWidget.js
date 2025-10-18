@@ -5,6 +5,7 @@ import { useAccount } from 'wagmi';
 import { useAaveHealthFactor } from '@/libs/useAaveData';
 import { WidgetErrorBoundary } from '@/components/ErrorBoundaryOptimized';
 import InfoButton from '@/components/InfoButton';
+import AlertSettings from '@/components/AlertSettings';
 
 const AaveHealthWidget = memo(() => {
   const { chainId } = useAccount();
@@ -101,6 +102,11 @@ const AaveHealthWidget = memo(() => {
                   </div>
                 </div>
               `}
+            />
+            <AlertSettings
+              widgetType="healthFactor"
+              currentValue={healthFactor}
+              widgetName="Health Factor"
             />
           </div>
           <div className="flex items-center gap-3">

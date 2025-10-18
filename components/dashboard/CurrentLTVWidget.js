@@ -6,6 +6,7 @@ import { useAccount } from 'wagmi';
 import { WidgetErrorBoundary } from '@/components/ErrorBoundaryOptimized';
 import InfoButton from '@/components/InfoButton';
 import StatusBadge from '@/components/StatusBadge';
+import AlertSettings from '@/components/AlertSettings';
 
 // Card that shows the user's current Loan-to-Value (LTV) from Aave with UI matching the screenshot
 export default function CurrentLTVWidget() {
@@ -93,6 +94,11 @@ export default function CurrentLTVWidget() {
                   <div class='text-xs text-base-content/70'>Linea rossa = tua <strong>Liquidation Threshold</strong> attuale${liqThresholdPercent != null ? ` (${liqThresholdPercent.toFixed(2)}%)` : ''}.</div>
                 </div>
               `}
+            />
+            <AlertSettings
+              widgetType="ltv"
+              currentValue={ltvPercent ? ltvPercent / 100 : 0}
+              widgetName="Current LTV"
             />
           </div>
           <div className="flex items-center gap-3">
