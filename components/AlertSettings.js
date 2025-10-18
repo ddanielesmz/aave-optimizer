@@ -36,6 +36,12 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
 
   const createAlert = async (e) => {
     e.preventDefault();
+    
+    if (!session?.user?.id) {
+      alert("Devi essere autenticato per creare alert. Vai su /api/auth/signin");
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
@@ -110,7 +116,8 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
     }
   };
 
-  if (!session?.user?.id) return null;
+  // Mostra sempre l'icona per permettere il test, anche senza autenticazione
+  // if (!session?.user?.id) return null;
 
   return (
     <div className="relative">
@@ -147,7 +154,15 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
           {/* Lista alert esistenti */}
           <div className="mb-4">
             <h4 className="text-sm font-medium text-gray-700 mb-2">Alert Attivi:</h4>
-            {alerts.length === 0 ? (
+            {!session?.user?.id ? (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  <strong>⚠️ Autenticazione richiesta</strong><br/>
+                  Devi essere loggato per configurare alert.<br/>
+                  <a href="/api/auth/signin" className="text-blue-600 underline">Vai al login</a>
+                </p>
+              </div>
+            ) : alerts.length === 0 ? (
               <p className="text-sm text-gray-500">Nessun alert configurato</p>
             ) : (
               <div className="space-y-2">
@@ -186,14 +201,22 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
           <form onSubmit={createAlert} className="space-y-3">
             <h4 className="text-sm font-medium text-gray-700">Nuovo Alert:</h4>
             
-            <input
-              type="text"
-              placeholder="Nome alert"
-              value={newAlert.alertName}
-              onChange={(e) => setNewAlert({ ...newAlert, alertName: e.target.value })}
-              className="input input-bordered input-sm w-full"
-              required
-            />
+            {!session?.user?.id ? (
+              <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  Effettua il login per configurare alert
+                </p>
+              </div>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  placeholder="Nome alert"
+                  value={newAlert.alertName}
+                  onChange={(e) => setNewAlert({ ...newAlert, alertName: e.target.value })}
+                  className="input input-bordered input-sm w-full"
+                  required
+                />
 
             <div className="flex space-x-2">
               <select
@@ -247,17 +270,19 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
               <span className="text-sm text-gray-600">min</span>
             </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn btn-primary btn-sm w-full"
-            >
-              {isLoading ? (
-                <span className="loading loading-spinner loading-xs"></span>
-              ) : (
-                "Crea Alert"
-              )}
-            </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="btn btn-primary btn-sm w-full"
+                >
+                  {isLoading ? (
+                    <span className="loading loading-spinner loading-xs"></span>
+                  ) : (
+                    "Crea Alert"
+                  )}
+                </button>
+              </>
+            )}
           </form>
         </div>
       )}
