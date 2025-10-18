@@ -1,11 +1,11 @@
 const config = {
   // REQUIRED
-  appName: "ShipFast",
+  appName: "Aave Optimizer Dashboard",
   // REQUIRED: a short description of your app for SEO tags (can be overwritten)
   appDescription:
-    "Professional DeFi dashboard for tracking portfolios, analyzing markets, and managing crypto investments.",
+    "Professional DeFi dashboard for optimizing Aave positions, tracking portfolios, analyzing markets, and managing crypto investments.",
   // REQUIRED (no https://, not trialing slash at the end, just the naked domain)
-  domainName: "shipfa.st",
+  domainName: "aaveoptimizer.com",
   crisp: {
     // Crisp website ID. IF YOU DON'T USE CRISP: just remove this => Then add a support email in this config file (resend.supportEmail) otherwise customer support won't work.
     id: "",
@@ -22,20 +22,20 @@ const config = {
             ? "price_1Niyy5AxyNprDp7iZIqEyD2h"
             : "price_456",
         //  REQUIRED - Name of the plan, displayed on the pricing page
-        name: "Starter",
+        name: "Basic",
         // A friendly description of the plan, displayed on the pricing page. Tip: explain why this plan and not others
-        description: "Perfect for small projects",
+        description: "Perfect for DeFi beginners",
         // The price you want to display, the one user will be charged on Stripe.
-        price: 79,
+        price: 29,
         // If you have an anchor price (i.e. $29) that you want to display crossed out, put it here. Otherwise, leave it empty
-        priceAnchor: 99,
+        priceAnchor: 49,
         features: [
           {
-            name: "NextJS boilerplate",
+            name: "Portfolio tracking",
           },
-          { name: "User oauth" },
-          { name: "Database" },
-          { name: "Emails" },
+          { name: "Basic analytics" },
+          { name: "Aave position monitoring" },
+          { name: "Email alerts" },
         ],
       },
       {
@@ -45,19 +45,19 @@ const config = {
           process.env.NODE_ENV === "development"
             ? "price_1O5KtcAxyNprDp7iftKnrrpw"
             : "price_456",
-        name: "Advanced",
-        description: "You need more power",
+        name: "Pro",
+        description: "For serious DeFi traders",
         price: 99,
         priceAnchor: 149,
         features: [
           {
-            name: "NextJS boilerplate",
+            name: "Advanced analytics",
           },
-          { name: "User oauth" },
-          { name: "Database" },
-          { name: "Emails" },
-          { name: "1 year of updates" },
-          { name: "24/7 support" },
+          { name: "Multi-chain support" },
+          { name: "Automated strategies" },
+          { name: "Priority support" },
+          { name: "Custom alerts" },
+          { name: "API access" },
         ],
       },
     ],
@@ -70,11 +70,11 @@ const config = {
   },
   resend: {
     // REQUIRED — Email 'From' field to be used when sending magic login links
-    fromNoReply: `ShipFast <noreply@resend.shipfa.st>`,
+    fromNoReply: `Aave Optimizer Dashboard <noreply@aaveoptimizer.com>`,
     // REQUIRED — Email 'From' field to be used when sending other emails, like abandoned carts, updates etc..
-    fromAdmin: `Marc at ShipFast <marc@resend.shipfa.st>`,
+    fromAdmin: `Aave Optimizer Dashboard <admin@aaveoptimizer.com>`,
     // Email shown to customer if need support. Leave empty if not needed => if empty, set up Crisp above, otherwise you won't be able to offer customer support."
-    supportEmail: "marc.louvion@gmail.com",
+    supportEmail: "support@aaveoptimizer.com",
   },
   colors: {
     // REQUIRED — The DaisyUI theme to use (added to the main layout.js). Leave blank for default (light & dark mode). If you any other theme than light/dark, you need to add it in config.tailwind.js in daisyui.themes.
@@ -109,6 +109,13 @@ const config = {
       attempts: parseInt(process.env.QUEUE_RETRY_ATTEMPTS) || 3,
       delay: parseInt(process.env.QUEUE_RETRY_DELAY) || 2000,
     }
+  },
+  telegram: {
+    // Configurazione Telegram per notifiche alert
+    botToken: process.env.TELEGRAM_BOT_TOKEN,
+    enabled: !!process.env.TELEGRAM_BOT_TOKEN,
+    // Intervallo di controllo alert (in millisecondi)
+    checkInterval: parseInt(process.env.ALERT_CHECK_INTERVAL) || 5 * 60 * 1000, // 5 minuti
   },
 };
 
