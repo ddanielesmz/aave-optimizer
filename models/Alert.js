@@ -1,12 +1,13 @@
 import mongoose from "mongoose";
-import toJSON from "./plugins/toJSON";
+import toJSON from "./plugins/toJSON.js";
 
 const alertSchema = mongoose.Schema(
   {
-    userId: {
-      type: mongoose.SchemaTypes.ObjectId,
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      index: true,
+      required: false,
     },
     widgetType: {
       type: String,
@@ -32,7 +33,7 @@ const alertSchema = mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    telegramChatId: {
+    telegramUsername: {
       type: String,
       required: true,
       trim: true,
@@ -58,7 +59,8 @@ const alertSchema = mongoose.Schema(
 );
 
 // Index per performance
-alertSchema.index({ userId: 1, widgetType: 1 });
+alertSchema.index({ createdBy: 1, widgetType: 1 });
+alertSchema.index({ widgetType: 1 });
 alertSchema.index({ isActive: 1 });
 
 // Plugin per JSON pulito

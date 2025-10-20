@@ -6,7 +6,6 @@ import { useAaveHealthFactor } from '@/libs/useAaveData';
 import { WidgetErrorBoundary } from '@/components/ErrorBoundaryOptimized';
 import InfoButton from '@/components/InfoButton';
 import AlertSettings from '@/components/AlertSettings';
-import TestAlertIcon from '@/components/TestAlertIcon';
 
 const AaveHealthWidget = memo(() => {
   const { chainId } = useAccount();
@@ -104,7 +103,6 @@ const AaveHealthWidget = memo(() => {
                 </div>
               `}
             />
-            <TestAlertIcon />
             <AlertSettings
               widgetType="healthFactor"
               currentValue={healthFactor}

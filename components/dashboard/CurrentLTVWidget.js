@@ -149,12 +149,7 @@ export default function CurrentLTVWidget() {
             <span className="tooltip" data-tip="No debt relative to collateral (start of scale)">0%</span>
             <span className="tooltip" data-tip="Maximum on the scale">100%</span>
           </div>
-          {false && liqThresholdPercent != null && (
-            <div className="flex justify-end text-[11px] text-base-content/60 -mt-1 mb-1">
-              <span>Threshold: {liqThresholdPercent.toFixed(2)}%</span>
-            </div>
-          )}
-            {/* Progress bar with external label wrapper to avoid clipping */}
+          {/* Progress bar with external label wrapper to avoid clipping */}
             <div className="relative pb-9">
 				  <div className="w-full bg-base-200 rounded-full h-3.5 overflow-hidden relative">
 					<div 

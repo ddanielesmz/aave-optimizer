@@ -1,28 +1,18 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/libs/auth";
-import connectMongo from "@/libs/mongo";
+import connectMongo from "@/libs/mongoose";
 import Alert from "@/models/Alert";
 
 // PATCH - Aggiorna alert (toggle attivo/disattivo)
 export async function PATCH(req, { params }) {
   try {
-    const session = await auth();
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Non autorizzato" },
-        { status: 401 }
-      );
-    }
-
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const { isActive } = body;
 
     await connectMongo();
 
-    const alert = await Alert.findOneAndUpdate(
-      { _id: id, userId: session.user.id },
+    const alert = await Alert.findByIdAndUpdate(
+      { _id: id },
       { isActive },
       { new: true }
     );
@@ -47,22 +37,12 @@ export async function PATCH(req, { params }) {
 // DELETE - Elimina alert
 export async function DELETE(req, { params }) {
   try {
-    const session = await auth();
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Non autorizzato" },
-        { status: 401 }
-      );
-    }
-
-    const { id } = params;
+    const { id } = await params;
 
     await connectMongo();
 
-    const alert = await Alert.findOneAndDelete({
+    const alert = await Alert.findByIdAndDelete({
       _id: id,
-      userId: session.user.id,
     });
 
     if (!alert) {

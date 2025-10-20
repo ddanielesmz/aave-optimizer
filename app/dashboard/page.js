@@ -5,7 +5,6 @@ import StablecoinSupplyOptimizer from "@/components/dashboard/StablecoinSupplyOp
 import StablecoinBorrowOptimizer from "@/components/dashboard/StablecoinBorrowOptimizer";
 import FinancialSummaryWidget from "@/components/dashboard/FinancialSummaryWidget";
 import NetWorthTrendCard from "@/components/dashboard/NetWorthTrendCard";
-import TestAlertWidget from "@/components/dashboard/TestAlertWidget";
 
 export const dynamic = "force-dynamic";
 
@@ -29,11 +28,6 @@ export default function Dashboard() {
           <div>
             <FinancialSummaryWidget />
           </div>
-        </div>
-
-        {/* Test Alert Widget */}
-        <div className="mt-6 grid grid-cols-1 gap-6">
-          <TestAlertWidget />
         </div>
 
         {/* Central widgets: Current LTV, Health Factor, Net Worth Trend */}

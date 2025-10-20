@@ -4,9 +4,21 @@ import GoogleProvider from "next-auth/providers/google";
 // import EmailProvider from "next-auth/providers/email"; // Disabilitato per edge runtime
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 
-import connectDB from "./mongo"; // il tuo helper per connettere MongoDB (libs/mongo.js)
-import User from "../models/User"; // modello User (assumendo models/User.js)
+import connectMongo from "./mongoose";
+
+const authSecret = process.env.NEXTAUTH_SECRET;
+
+if (!authSecret) {
+  throw new Error(
+    "NEXTAUTH_SECRET must be defined. Generate a strong value and set it in the environment before starting the app.",
+  );
+}
+
+const allowedGoogleDomain = process.env.NEXTAUTH_GOOGLE_ALLOWED_DOMAIN?.toLowerCase();
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Configurazione per NextAuth v5
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -20,7 +32,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials || !credentials.email) return null;
+        if (!credentials || typeof credentials.email !== "string" || typeof credentials.password !== "string") {
+          return null;
+        }
+
+        const email = credentials.email.trim().toLowerCase();
+
+        if (!emailRegex.test(email) || credentials.password.length < 1) {
+          return null;
+        }
 
         // Solo se MongoDB è configurato
         if (!process.env.MONGODB_URI) {
@@ -31,12 +51,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         try {
           // Connessione diretta a MongoDB usando mongoose
           if (mongoose.connection.readyState !== 1) {
-            await mongoose.connect(process.env.MONGODB_URI);
+            await connectMongo();
           }
 
+          // Dynamic import per evitare problemi con middleware
+          const { default: User } = await import("../models/User");
+
           // Recupera utente (assumendo che la password sia salvata hashed)
-          const user = await User.findOne({ email: credentials.email }).select("+password");
-          if (!user) return null;
+          const user = await User.findOne({ email }).select("+password");
+          if (!user?.password) return null;
 
           const isValid = await bcrypt.compare(credentials.password, user.password);
           if (!isValid) return null;
@@ -68,26 +91,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
 
   // impostazioni generali
-  secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-development",
+  secret: authSecret,
   session: {
     strategy: "jwt",
   },
 
   callbacks: {
-    // Gestisce il login OAuth (Google) - VERSIONE SEMPLIFICATA PER DEBUG
-    async signIn({ user, account, profile }) {
-      console.log('🔍 SignIn callback called:', {
-        provider: account?.provider,
-        email: user?.email,
-        name: user?.name
-      });
-      
+    // Gestisce il login OAuth (Google)
+    async signIn({ user, account }) {
       if (account?.provider === "google") {
-        console.log('Google OAuth detected, allowing access');
-        return true; // Permetti sempre l'accesso per ora
+        if (allowedGoogleDomain) {
+          const emailDomain = user?.email?.split("@")[1]?.toLowerCase();
+
+          if (!emailDomain || emailDomain !== allowedGoogleDomain) {
+            console.warn('[NextAuth] Blocked Google sign-in attempt due to unauthorized domain');
+            return false;
+          }
+        }
+        return true;
       }
-      
-      console.log('Other provider or no provider, allowing access');
       return true;
     },
     

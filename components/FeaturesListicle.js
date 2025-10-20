@@ -8,14 +8,15 @@ import { useState, useEffect, useRef } from "react";
 // - svg: icon of the feature
 const features = [
   {
-    name: "Emails",
+    name: "Real-time Monitoring",
     description: (
       <>
         <ul className="space-y-1">
           {[
-            "Send transactional emails",
-            "DNS setup to avoid spam folder (DKIM, DMARC, SPF in subdomain)",
-            "Webhook to receive & forward emails",
+            "Live position tracking across chains",
+            "Health factor monitoring",
+            "APY change alerts",
+            "Liquidation risk warnings",
           ].map((item) => (
             <li key={item} className="flex items-center gap-3">
               <svg
@@ -47,7 +48,7 @@ const features = [
                 clipRule="evenodd"
               />
             </svg>
-            Time saved: 2 hours
+            Time saved: 5 hours daily
           </li>
         </ul>
       </>
@@ -63,20 +64,22 @@ const features = [
       >
         <path
           strokeLinecap="round"
-          d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25"
+          strokeLinejoin="round"
+          d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l-1-3m1 3l-1-3m-16.5-3h1.5m0 0h16.5m-16.5 0v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l-1-3m1 3l-1-3"
         />
       </svg>
     ),
   },
   {
-    name: "Payments",
+    name: "Advanced Analytics",
     description: (
       <>
         <ul className="space-y-2">
           {[
-            "Create checkout sessions",
-            "Handle webhooks to update user's account",
-            "Tips to setup your account & reduce chargebacks",
+            "Portfolio performance metrics",
+            "Yield optimization suggestions",
+            "Risk analysis and scoring",
+            "Historical data visualization",
           ].map((item) => (
             <li key={item} className="flex items-center gap-3">
               <svg
@@ -108,7 +111,7 @@ const features = [
                 clipRule="evenodd"
               />
             </svg>
-            Time saved: 2 hours
+            Time saved: 3 hours daily
           </li>
         </ul>
       </>
@@ -125,21 +128,21 @@ const features = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"
+          d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"
         />
       </svg>
     ),
   },
   {
-    name: "Login",
+    name: "Multi-chain",
     description: (
       <>
         <ul className="space-y-2">
           {[
-            "Magic links setup",
-            "Login with Google walkthrough",
-            "Save user data in MongoDB",
-            "Private/protected pages & API calls",
+            "Ethereum mainnet support",
+            "Polygon network integration",
+            "Avalanche chain support",
+            "Unified portfolio view",
           ].map((item) => (
             <li key={item} className="flex items-center gap-3">
               <svg
@@ -171,7 +174,7 @@ const features = [
                 clipRule="evenodd"
               />
             </svg>
-            Time saved: 3 hours
+            Time saved: 2 hours daily
           </li>
         </ul>
       </>
@@ -188,82 +191,21 @@ const features = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
+          d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"
         />
       </svg>
     ),
   },
   {
-    name: "Database",
-    description: (
-      <>
-        <ul className="space-y-2">
-          {["Mongoose schema", "Mongoose plugins to make your life easier"].map(
-            (item) => (
-              <li key={item} className="flex items-center gap-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="w-[18px] h-[18px] inline shrink-0 opacity-80"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-
-                {item}
-              </li>
-            )
-          )}
-          <li className="flex items-center gap-3 text-accent font-medium">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="w-[18px] h-[18px] inline shrink-0"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Time saved: 2 hours
-          </li>
-        </ul>
-      </>
-    ),
-    svg: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={1.5}
-        stroke="currentColor"
-        className="w-8 h-8"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125"
-        />
-      </svg>
-    ),
-  },
-  {
-    name: "SEO",
+    name: "Smart Alerts",
     description: (
       <>
         <ul className="space-y-2">
           {[
-            "All meta tags to rank on Google",
-            "OpenGraph tags to share on social media",
-            "Automated sitemap generation to fasten Google indexing",
-            "Structured data markup for Rich Snippets",
-            "SEO-optimized UI components",
+            "Email notifications",
+            "SMS alerts",
+            "Webhook integrations",
+            "Custom threshold settings",
           ].map((item) => (
             <li key={item} className="flex items-center gap-3">
               <svg
@@ -295,7 +237,7 @@ const features = [
                 clipRule="evenodd"
               />
             </svg>
-            Time saved: 6 hours
+            Time saved: 1 hour daily
           </li>
         </ul>
       </>
@@ -312,20 +254,21 @@ const features = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+          d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
         />
       </svg>
     ),
   },
   {
-    name: "Style",
+    name: "API Access",
     description: (
       <>
         <ul className="space-y-2">
           {[
-            "Components, animations & sections (like the pricing page below)",
-            "20+ themes with daisyUI",
-            "Automatic dark mode",
+            "RESTful API endpoints",
+            "Real-time data feeds",
+            "Custom integrations",
+            "Rate limiting & security",
           ].map((item) => (
             <li key={item} className="flex items-center gap-3">
               <svg
@@ -357,7 +300,7 @@ const features = [
                 clipRule="evenodd"
               />
             </svg>
-            Time saved: 5 hours
+            Time saved: 4 hours daily
           </li>
         </ul>
       </>
@@ -374,7 +317,70 @@ const features = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42"
+          d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"
+        />
+      </svg>
+    ),
+  },
+  {
+    name: "Security",
+    description: (
+      <>
+        <ul className="space-y-2">
+          {[
+            "Read-only access to positions",
+            "No private key storage",
+            "Encrypted data transmission",
+            "SOC 2 compliance",
+          ].map((item) => (
+            <li key={item} className="flex items-center gap-3">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="w-[18px] h-[18px] inline shrink-0 opacity-80"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                  clipRule="evenodd"
+                />
+              </svg>
+
+              {item}
+            </li>
+          ))}
+          <li className="flex items-center gap-3 text-accent font-medium">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-[18px] h-[18px] inline shrink-0"
+            >
+              <path
+                fillRule="evenodd"
+                d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Time saved: 2 hours daily
+          </li>
+        </ul>
+      </>
+    ),
+    svg: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+        stroke="currentColor"
+        className="w-8 h-8"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.623 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
         />
       </svg>
     ),
@@ -434,17 +440,17 @@ const FeaturesListicle = () => {
       <div className="max-w-3xl mx-auto">
         <div className="bg-base-100 max-md:px-8 max-w-3xl">
           <p className="text-accent font-medium text-sm font-mono mb-3">
-            const launch_time = &quot;Today&quot;;
+            const optimization_time = &quot;Now&quot;;
           </p>
           <h2 className="font-extrabold text-3xl lg:text-5xl tracking-tight mb-8">
             {/* 💡 COPY TIP: Remind visitors about the value of your product. Why do they need it? */}
-            Supercharge your app instantly, launch faster, make $
+            Optimize your DeFi positions instantly, maximize yield, save time
           </h2>
           <div className="text-base-content/80 leading-relaxed mb-8 lg:text-lg">
             {/* 💡 COPY TIP: Explain how your product delivers what you promise in the headline. */}
-            Login users, process payments and send emails at lightspeed. Spend
-            your time building your startup, not integrating APIs. ShipFast
-            provides you with the boilerplate code you need to launch, FAST.
+            Monitor positions, track APY changes and avoid liquidations at lightspeed. Spend
+            your time optimizing strategies, not manually tracking data. Aave Optimizer Dashboard
+            provides you with the analytics tools you need to succeed in DeFi.
           </div>
         </div>
       </div>

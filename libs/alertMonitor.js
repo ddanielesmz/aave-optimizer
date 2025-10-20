@@ -1,8 +1,6 @@
-import connectMongo from "@/libs/mongo";
+import connectMongo from "@/libs/mongoose";
 import Alert from "@/models/Alert";
 import telegramNotifier from "@/libs/telegram";
-import { useAaveHealthFactor } from "@/libs/useAaveData";
-import { useAaveUserAccountDataRealtime } from "@/libs/useAaveData";
 
 class AlertMonitor {
   constructor() {
@@ -20,7 +18,7 @@ class AlertMonitor {
       return;
     }
 
-    console.log("Avvio AlertMonitor...");
+    console.log("🚨 Avvio AlertMonitor...");
     this.isRunning = true;
     
     // Esegui controllo immediato
@@ -30,6 +28,8 @@ class AlertMonitor {
     this.intervalId = setInterval(() => {
       this.checkAlerts();
     }, this.checkInterval);
+
+    console.log(`✅ AlertMonitor avviato - controlli ogni ${this.checkInterval / 1000 / 60} minuti`);
   }
 
   /**
@@ -37,16 +37,19 @@ class AlertMonitor {
    */
   stop() {
     if (!this.isRunning) {
+      console.log("AlertMonitor non è in esecuzione");
       return;
     }
 
-    console.log("Arresto AlertMonitor...");
+    console.log("🛑 Fermata AlertMonitor...");
     this.isRunning = false;
     
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
+
+    console.log("✅ AlertMonitor fermato");
   }
 
   /**
@@ -54,167 +57,117 @@ class AlertMonitor {
    */
   async checkAlerts() {
     try {
+      console.log("🔍 Controllo alert attivi...");
+      
       await connectMongo();
       
       // Recupera tutti gli alert attivi
       const activeAlerts = await Alert.find({ isActive: true });
       
       if (activeAlerts.length === 0) {
-        console.log("Nessun alert attivo da controllare");
+        console.log("📭 Nessun alert attivo trovato");
         return;
       }
 
-      console.log(`Controllo ${activeAlerts.length} alert attivi...`);
+      console.log(`📊 Trovati ${activeAlerts.length} alert attivi`);
 
-      // Raggruppa alert per tipo di widget
-      const alertsByWidget = this.groupAlertsByWidget(activeAlerts);
+      // Per ora, simuliamo alcuni valori per testare il sistema
+      // In produzione, questi valori dovrebbero venire da API esterne
+      const mockValues = {
+        healthFactor: 1.2, // Valore critico per test
+        ltv: 0.6,
+        netAPY: 0.05
+      };
 
-      // Controlla ogni gruppo di widget
-      for (const [widgetType, alerts] of Object.entries(alertsByWidget)) {
-        await this.checkWidgetAlerts(widgetType, alerts);
+      for (const alert of activeAlerts) {
+        await this.checkSingleAlert(alert, mockValues);
       }
 
     } catch (error) {
-      console.error("Errore nel controllo alert:", error);
-    }
-  }
-
-  /**
-   * Raggruppa gli alert per tipo di widget
-   */
-  groupAlertsByWidget(alerts) {
-    return alerts.reduce((groups, alert) => {
-      if (!groups[alert.widgetType]) {
-        groups[alert.widgetType] = [];
-      }
-      groups[alert.widgetType].push(alert);
-      return groups;
-    }, {});
-  }
-
-  /**
-   * Controlla gli alert per un tipo di widget specifico
-   */
-  async checkWidgetAlerts(widgetType, alerts) {
-    try {
-      let currentValue = null;
-      let widgetName = "";
-
-      // Recupera il valore attuale del widget
-      switch (widgetType) {
-        case "healthFactor":
-          currentValue = await this.getHealthFactorValue();
-          widgetName = "Health Factor";
-          break;
-        case "ltv":
-          currentValue = await this.getLTVValue();
-          widgetName = "LTV Ratio";
-          break;
-        case "netAPY":
-          currentValue = await this.getNetAPYValue();
-          widgetName = "Net APY";
-          break;
-        default:
-          console.warn(`Tipo widget non supportato: ${widgetType}`);
-          return;
-      }
-
-      if (currentValue === null) {
-        console.warn(`Impossibile recuperare valore per ${widgetType}`);
-        return;
-      }
-
-      console.log(`${widgetName}: ${currentValue}`);
-
-      // Controlla ogni alert per questo widget
-      for (const alert of alerts) {
-        await this.checkSingleAlert(alert, currentValue, widgetName);
-      }
-
-    } catch (error) {
-      console.error(`Errore nel controllo alert per ${widgetType}:`, error);
+      console.error("❌ Errore nel controllo alert:", error);
     }
   }
 
   /**
    * Controlla un singolo alert
    */
-  async checkSingleAlert(alert, currentValue, widgetName) {
+  async checkSingleAlert(alert, currentValues) {
     try {
-      // Verifica se l'alert può essere triggerato (cooldown)
-      if (!alert.canTrigger()) {
+      const { widgetType, condition, threshold, cooldownMinutes, lastTriggered } = alert;
+      
+      // Ottieni il valore corrente per questo widget
+      const currentValue = currentValues[widgetType];
+      
+      if (currentValue === undefined) {
+        console.log(`⚠️ Valore non disponibile per widget: ${widgetType}`);
         return;
+      }
+
+      // Verifica se l'alert può essere triggerato (controlla cooldown)
+      if (lastTriggered) {
+        const timeSinceLastTrigger = Date.now() - new Date(lastTriggered).getTime();
+        const cooldownMs = cooldownMinutes * 60 * 1000;
+        
+        if (timeSinceLastTrigger < cooldownMs) {
+          console.log(`⏳ Alert ${alert.alertName} in cooldown (${Math.round((cooldownMs - timeSinceLastTrigger) / 1000 / 60)} min rimanenti)`);
+          return;
+        }
       }
 
       // Verifica se la condizione è soddisfatta
-      if (!alert.checkCondition(currentValue)) {
-        return;
+      let conditionMet = false;
+      
+      switch (condition) {
+        case "greater_than":
+          conditionMet = currentValue > threshold;
+          break;
+        case "less_than":
+          conditionMet = currentValue < threshold;
+          break;
+        case "equals":
+          conditionMet = Math.abs(currentValue - threshold) < 0.0001; // Tolleranza per float
+          break;
       }
 
-      console.log(`🚨 Alert triggerato: ${alert.alertName} (${currentValue} ${alert.condition} ${alert.threshold})`);
+      if (conditionMet) {
+        console.log(`🚨 Alert triggerato: ${alert.alertName} (${currentValue} ${condition} ${threshold})`);
+        await this.triggerAlert(alert, currentValue);
+      } else {
+        console.log(`✅ Alert ${alert.alertName} OK (${currentValue} non ${condition} ${threshold})`);
+      }
 
+    } catch (error) {
+      console.error(`❌ Errore nel controllo alert ${alert.alertName}:`, error);
+    }
+  }
+
+  /**
+   * Triggera un alert
+   */
+  async triggerAlert(alert, currentValue) {
+    try {
       // Invia notifica Telegram
-      const result = await telegramNotifier.sendAlert(alert, currentValue, widgetName);
+      const result = await telegramNotifier.sendAlert(alert, currentValue, this.getWidgetDisplayName(alert.widgetType));
       
       if (result.success) {
-        // Aggiorna timestamp dell'ultimo trigger
+        console.log(`📱 Notifica Telegram inviata per alert: ${alert.alertName}`);
+        
+        // Aggiorna timestamp ultimo trigger
         await Alert.findByIdAndUpdate(alert._id, {
-          lastTriggered: new Date(),
+          lastTriggered: new Date()
         });
         
-        console.log(`✅ Notifica inviata per alert: ${alert.alertName}`);
       } else {
-        console.error(`❌ Errore nell'invio notifica per alert: ${alert.alertName}`, result.error);
+        console.error(`❌ Errore invio Telegram per alert ${alert.alertName}:`, result.error);
       }
 
     } catch (error) {
-      console.error(`Errore nel controllo alert ${alert.alertName}:`, error);
+      console.error(`❌ Errore nel trigger alert ${alert.alertName}:`, error);
     }
   }
 
   /**
-   * Recupera il valore attuale dell'Health Factor
-   */
-  async getHealthFactorValue() {
-    try {
-      // Qui dovresti implementare la logica per recuperare il valore reale
-      // Per ora restituisco un valore mock
-      // In produzione, dovresti usare le stesse funzioni dei widget
-      return Math.random() * 2; // Mock value tra 0 e 2
-    } catch (error) {
-      console.error("Errore nel recupero Health Factor:", error);
-      return null;
-    }
-  }
-
-  /**
-   * Recupera il valore attuale dell'LTV
-   */
-  async getLTVValue() {
-    try {
-      // Mock value tra 0 e 1
-      return Math.random();
-    } catch (error) {
-      console.error("Errore nel recupero LTV:", error);
-      return null;
-    }
-  }
-
-  /**
-   * Recupera il valore attuale del Net APY
-   */
-  async getNetAPYValue() {
-    try {
-      // Mock value tra -5% e 15%
-      return (Math.random() - 0.5) * 20;
-    } catch (error) {
-      console.error("Errore nel recupero Net APY:", error);
-      return null;
-    }
-  }
-
-  /**
-   * Testa un singolo alert manualmente
+   * Testa un alert specifico
    */
   async testAlert(alertId) {
     try {
@@ -225,33 +178,23 @@ class AlertMonitor {
         throw new Error("Alert non trovato");
       }
 
+      console.log(`🧪 Test alert: ${alert.alertName}`);
+      
       // Simula un valore che triggera l'alert
-      let testValue;
-      switch (alert.condition) {
-        case "less_than":
-          testValue = alert.threshold - 0.1;
-          break;
-        case "greater_than":
-          testValue = alert.threshold + 0.1;
-          break;
-        case "equals":
-          testValue = alert.threshold;
-          break;
-        default:
-          testValue = alert.threshold;
-      }
-
-      const widgetName = this.getWidgetDisplayName(alert.widgetType);
-      await this.checkSingleAlert(alert, testValue, widgetName);
-
+      const testValue = alert.threshold - 0.1; // Valore leggermente sotto la soglia
+      
+      await this.triggerAlert(alert, testValue);
+      
+      console.log(`✅ Test alert completato per: ${alert.alertName}`);
+      
     } catch (error) {
-      console.error("Errore nel test alert:", error);
+      console.error(`❌ Errore nel test alert:`, error);
       throw error;
     }
   }
 
   /**
-   * Ottiene il nome display del widget
+   * Ottiene il nome display per un widget
    */
   getWidgetDisplayName(widgetType) {
     switch (widgetType) {
@@ -265,6 +208,16 @@ class AlertMonitor {
         return widgetType;
     }
   }
+
+  /**
+   * Verifica se il monitoraggio è attivo
+   */
+  isActive() {
+    return this.isRunning;
+  }
 }
 
-export default new AlertMonitor();
+// Istanza singleton
+const alertMonitor = new AlertMonitor();
+
+export default alertMonitor;

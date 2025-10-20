@@ -4,16 +4,17 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAccount } from 'wagmi';
-import { 
-  fetchAaveUserAccountData,
-  fetchUserStablecoinSupplyPositionsOnchain,
-  fetchUserStablecoinBorrowPositionsOnchain,
-  fetchStablecoinAPYsOnchain,
-  fetchStablecoinBorrowRatesOnchain,
-  detectAvailableStablecoinsOnchain
-} from './aaveOnchain';
 import { isAaveSupported } from './aaveConfig';
 import { withCache, cacheKeys, invalidateUserCache, invalidateChainCache, prefetchNetworkData } from './aaveCache';
+
+let aaveOnchainModulePromise;
+
+async function getAaveOnchainModule() {
+  if (!aaveOnchainModulePromise) {
+    aaveOnchainModulePromise = import('./aaveOnchain');
+  }
+  return aaveOnchainModulePromise;
+}
 
 /**
  * Hook per dati dell'account utente
@@ -47,6 +48,12 @@ export function useAaveUserData() {
 
     try {
       setData(prev => ({ ...prev, isLoading: true, error: null }));
+
+      const {
+        fetchAaveUserAccountData,
+        fetchUserStablecoinSupplyPositionsOnchain,
+        fetchUserStablecoinBorrowPositionsOnchain,
+      } = await getAaveOnchainModule();
 
       // Se è un refresh forzato, invalida la cache prima
       if (forceRefresh) {
@@ -168,6 +175,11 @@ export function useAaveSupplyOptimization() {
     try {
       setData(prev => ({ ...prev, isLoading: true, error: null }));
 
+      const {
+        fetchUserStablecoinSupplyPositionsOnchain,
+        fetchStablecoinAPYsOnchain,
+      } = await getAaveOnchainModule();
+
       // Se è un refresh forzato, invalida la cache prima
       if (forceRefresh) {
         invalidateUserCache(address, chainId);
@@ -264,6 +276,11 @@ export function useAaveBorrowOptimization() {
     try {
       setData(prev => ({ ...prev, isLoading: true, error: null }));
 
+      const {
+        fetchUserStablecoinBorrowPositionsOnchain,
+        fetchStablecoinBorrowRatesOnchain,
+      } = await getAaveOnchainModule();
+
       // Se è un refresh forzato, invalida la cache prima
       if (forceRefresh) {
         invalidateUserCache(address, chainId);
@@ -357,6 +374,8 @@ export function useAaveHealthFactor() {
 
     try {
       setData(prev => ({ ...prev, isLoading: true, error: null }));
+
+      const { fetchAaveUserAccountData } = await getAaveOnchainModule();
 
       // Se è un refresh forzato, invalida la cache prima
       if (forceRefresh) {
@@ -513,6 +532,7 @@ export function useAaveUserAccountDataRealtime(refreshIntervalMs = 15000) {
 
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
+      const { fetchAaveUserAccountData } = await getAaveOnchainModule();
       const fresh = await fetchAaveUserAccountData(address, chainId); // NO CACHE
       setState({
         userAccountData: fresh,

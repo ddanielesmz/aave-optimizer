@@ -7,22 +7,21 @@ import { useRef, useState } from "react";
 
 const faqList = [
   {
-    question: "What do I get exactly?",
-    answer: <div className="space-y-2 leading-relaxed">Loreum Ipseum</div>,
+    question: "What chains do you support?",
+    answer: <div className="space-y-2 leading-relaxed">We currently support Ethereum, Polygon, and Avalanche networks. More chains are coming soon!</div>,
   },
   {
-    question: "Can I get a refund?",
+    question: "How accurate is the real-time data?",
     answer: (
       <p>
-        Yes! You can request a refund within 7 days of your purchase. Reach out
-        by email.
+        Our data is updated every few seconds directly from Aave's smart contracts and subgraphs, ensuring you have the most accurate and up-to-date information.
       </p>
     ),
   },
   {
-    question: "I have another question",
+    question: "Can I get alerts for liquidation risks?",
     answer: (
-      <div className="space-y-2 leading-relaxed">Cool, contact us by email</div>
+      <div className="space-y-2 leading-relaxed">Yes! We provide instant alerts via email, SMS, and webhooks when your positions approach liquidation thresholds.</div>
     ),
   },
 ];

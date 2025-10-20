@@ -1,9 +1,18 @@
 "use client";
 
-import MiniLineChart from "@/components/charts/MiniLineChart";
+import dynamic from "next/dynamic";
+import ChartPlaceholder from "@/components/charts/ChartPlaceholder";
+
+const MiniLineChart = dynamic(
+  () => import("@/components/charts/MiniLineChart"),
+  {
+    ssr: false,
+    loading: () => <ChartPlaceholder height="h-16" />,
+  },
+);
 
 const ProfitCard = ({ data }) => {
-  const chartData = data?.trend?.map((value, index) => ({ value })) || [];
+  const chartData = data?.trend?.map((value) => ({ value })) || [];
   const isPositive = (data?.change || 0) > 0;
   
   return (

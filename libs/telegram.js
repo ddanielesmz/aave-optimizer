@@ -7,20 +7,21 @@ class TelegramNotifier {
   }
 
   /**
-   * Invia una notifica Telegram
-   * @param {string} chatId - ID della chat Telegram
+   * Invia una notifica Telegram usando username
+   * @param {string} username - Username Telegram (es. @username)
    * @param {string} message - Messaggio da inviare
    * @param {Object} options - Opzioni aggiuntive
    */
-  async sendMessage(chatId, message, options = {}) {
+  async sendMessageToUsername(username, message, options = {}) {
     if (!this.botToken) {
       console.error("TELEGRAM_BOT_TOKEN non configurato");
       return { success: false, error: "Bot token non configurato" };
     }
 
     try {
+      // Usa direttamente l'username come chat_id
       const payload = {
-        chat_id: chatId,
+        chat_id: username, // Telegram accetta anche username come chat_id
         text: message,
         parse_mode: "HTML",
         disable_web_page_preview: true,
@@ -39,6 +40,37 @@ class TelegramNotifier {
         success: false,
         error: error.response?.data?.description || error.message,
       };
+    }
+  }
+
+  /**
+   * Ottiene il chat ID da un username Telegram
+   * @param {string} username - Username Telegram (es. @username)
+   */
+  async getChatIdFromUsername(username) {
+    try {
+      // Rimuovi @ se presente
+      const cleanUsername = username.replace('@', '');
+      
+      // Prova a ottenere le informazioni del chat
+      const response = await axios.get(`${this.baseUrl}/getUpdates`);
+      const updates = response.data.result;
+      
+      // Cerca l'ultimo messaggio da questo username
+      for (let i = updates.length - 1; i >= 0; i--) {
+        const update = updates[i];
+        if (update.message && update.message.from) {
+          const from = update.message.from;
+          if (from.username === cleanUsername) {
+            return from.id;
+          }
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Errore nel recupero chat ID:", error);
+      return null;
     }
   }
 
@@ -84,14 +116,14 @@ class TelegramNotifier {
   }
 
   /**
-   * Invia un alert per un widget specifico
+   * Invia un alert per un widget specifico usando username
    * @param {Object} alert - Configurazione dell'alert
    * @param {number} currentValue - Valore attuale
    * @param {string} widgetName - Nome del widget
    */
   async sendAlert(alert, currentValue, widgetName) {
     const message = this.formatAlertMessage(alert, currentValue, widgetName);
-    return await this.sendMessage(alert.telegramChatId, message);
+    return await this.sendMessageToUsername(alert.telegramUsername, message);
   }
 
   /**
