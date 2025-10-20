@@ -89,11 +89,7 @@ export async function GET(req) {
 
     // Genera chiave cache
     const cacheKey = CacheKeyBuilder.userAaveData(normalizedAddress, parsedChainId || 42161, 'account');
-<<<<<<< ours
     
-=======
-
->>>>>>> theirs
     // Controlla cache prima di fare richiesta on-chain
     let userData = await cache.get(cacheKey);
     let fromCache = false;
