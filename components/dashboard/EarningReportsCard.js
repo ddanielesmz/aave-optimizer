@@ -1,6 +1,15 @@
 "use client";
 
-import EarningReportsChart from "@/components/charts/EarningReportsChart";
+import dynamic from "next/dynamic";
+import ChartPlaceholder from "@/components/charts/ChartPlaceholder";
+
+const EarningReportsChart = dynamic(
+  () => import("@/components/charts/EarningReportsChart"),
+  {
+    ssr: false,
+    loading: () => <ChartPlaceholder height="h-48" />,
+  },
+);
 
 const EarningReportsCard = ({ data }) => {
   return (

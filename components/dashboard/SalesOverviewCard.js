@@ -1,6 +1,15 @@
 "use client";
 
-import SalesOverviewChart from "@/components/charts/SalesOverviewChart";
+import dynamic from "next/dynamic";
+import ChartPlaceholder from "@/components/charts/ChartPlaceholder";
+
+const SalesOverviewChart = dynamic(
+  () => import("@/components/charts/SalesOverviewChart"),
+  {
+    ssr: false,
+    loading: () => <ChartPlaceholder height="h-48" />,
+  },
+);
 
 const SalesOverviewCard = ({ data }) => {
   const latestChange = data?.[data.length - 1]?.change || 0;

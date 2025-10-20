@@ -1,5 +1,18 @@
 import { NextResponse } from "next/server";
 import { CacheKeyBuilder, getCacheManager } from "@/libs/redis";
+import { RateLimitError, enforceRateLimit } from "@/libs/rateLimiter";
+
+function getClientIdentifier(req) {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0]?.trim();
+  }
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) {
+    return realIp.trim();
+  }
+  return req.headers.get("cf-connecting-ip")?.trim() || "anonymous";
+}
 
 // Endpoints The Graph pubblici per Aave V3 per rete
 const AAVE_V3_ENDPOINTS = {
@@ -15,10 +28,41 @@ export async function POST(req) {
     const body = await req.json();
     const { chainId, query, variables } = body || {};
 
+    try {
+      await enforceRateLimit({
+        identifier: getClientIdentifier(req),
+        action: "aave-subgraph",
+        limit: 10,
+        windowSeconds: 60,
+      });
+    } catch (error) {
+      if (error instanceof RateLimitError) {
+        return NextResponse.json(
+          { error: "Too many requests. Please slow down." },
+          { status: 429, headers: { "Retry-After": String(error.retryAfter) } },
+        );
+      }
+      throw error;
+    }
+
     if (!chainId || !query) {
       return NextResponse.json(
         { error: "Missing chainId or query" },
         { status: 400 }
+      );
+    }
+
+    if (typeof query !== "string" || query.length > 5000) {
+      return NextResponse.json(
+        { error: "Query is invalid or too large" },
+        { status: 400 },
+      );
+    }
+
+    if (variables && typeof variables !== "object") {
+      return NextResponse.json(
+        { error: "Variables must be an object" },
+        { status: 400 },
       );
     }
 
@@ -38,12 +82,10 @@ export async function POST(req) {
     
     // Controlla cache prima di fare richiesta al subgraph
     let cachedData = await cache.get(cacheKey);
-    let fromCache = false;
-    
+
     if (cachedData) {
       console.log(`[API Subgraph] ✅ Dati trovati in cache per chain ${chainId}`);
-      fromCache = true;
-      
+
       return NextResponse.json({
         ...cachedData,
         _metadata: {

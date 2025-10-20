@@ -1,6 +1,15 @@
 "use client";
 
-import OrderStatsChart from "@/components/charts/OrderStatsChart";
+import dynamic from "next/dynamic";
+import ChartPlaceholder from "@/components/charts/ChartPlaceholder";
+
+const OrderStatsChart = dynamic(
+  () => import("@/components/charts/OrderStatsChart"),
+  {
+    ssr: false,
+    loading: () => <ChartPlaceholder height="h-48" />,
+  },
+);
 
 const OrderStatsCard = ({ data }) => {
   return (

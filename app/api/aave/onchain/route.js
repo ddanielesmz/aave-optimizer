@@ -2,6 +2,19 @@ import { NextResponse } from "next/server";
 import { fetchAaveUserAccountData } from "@/libs/aaveOnchain";
 import { CacheKeyBuilder, getCacheManager } from "@/libs/redis";
 import { getQueueManager, QUEUE_NAMES } from "@/libs/queueManager";
+import { RateLimitError, enforceRateLimit } from "@/libs/rateLimiter";
+
+function getClientIdentifier(req) {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0]?.trim();
+  }
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) {
+    return realIp.trim();
+  }
+  return req.headers.get("cf-connecting-ip")?.trim() || "anonymous";
+}
 
 /**
  * API Route per fetchare i dati dell'account Aave on-chain
@@ -11,7 +24,7 @@ export async function GET(req) {
   try {
     // Estrazione dell'indirizzo e chainId dai query parameters
     const { searchParams } = new URL(req.url);
-    const address = searchParams.get('address');
+    const address = searchParams.get('address')?.trim();
     const chainId = searchParams.get('chainId');
 
     // Validazione dell'indirizzo
@@ -26,9 +39,9 @@ export async function GET(req) {
     }
 
     // Validazione formato indirizzo
-    if (!address.startsWith('0x') || address.length !== 42) {
+    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
       return NextResponse.json(
-        { 
+        {
           error: "Indirizzo non valido",
           message: "L'indirizzo deve essere un indirizzo Ethereum valido (0x...)"
         },
@@ -36,11 +49,30 @@ export async function GET(req) {
       );
     }
 
+    try {
+      await enforceRateLimit({
+        identifier: `${getClientIdentifier(req)}:${address.toLowerCase()}`,
+        action: "aave-onchain",
+        limit: 6,
+        windowSeconds: 60,
+      });
+    } catch (error) {
+      if (error instanceof RateLimitError) {
+        return NextResponse.json(
+          {
+            error: "Too many requests. Please wait before retrying.",
+          },
+          { status: 429, headers: { "Retry-After": String(error.retryAfter) } },
+        );
+      }
+      throw error;
+    }
+
     // Validazione chainId se fornito
     const parsedChainId = chainId ? parseInt(chainId) : null;
     if (chainId && (isNaN(parsedChainId) || parsedChainId <= 0)) {
       return NextResponse.json(
-        { 
+        {
           error: "Chain ID non valido",
           message: "Il chainId deve essere un numero positivo valido"
         },
@@ -48,55 +80,57 @@ export async function GET(req) {
       );
     }
 
-    console.log(`[API Aave] Fetching data for address: ${address} on chain: ${parsedChainId || 'default'}`);
+    const normalizedAddress = address.toLowerCase();
+
+    console.log(`[API Aave] Fetching data for address: ${normalizedAddress} on chain: ${parsedChainId || 'default'}`);
 
     const cache = getCacheManager();
     const queueManager = getQueueManager();
-    
+
     // Genera chiave cache
-    const cacheKey = CacheKeyBuilder.userAaveData(address, parsedChainId || 42161, 'account');
+    const cacheKey = CacheKeyBuilder.userAaveData(normalizedAddress, parsedChainId || 42161, 'account');
     
     // Controlla cache prima di fare richiesta on-chain
     let userData = await cache.get(cacheKey);
     let fromCache = false;
     
     if (userData) {
-      console.log(`[API Aave] ✅ Dati trovati in cache per ${address}`);
+      console.log(`[API Aave] ✅ Dati trovati in cache per ${normalizedAddress}`);
       fromCache = true;
     } else {
-      console.log(`[API Aave] ❌ Cache miss per ${address}, fetching on-chain...`);
-      
+      console.log(`[API Aave] ❌ Cache miss per ${normalizedAddress}, fetching on-chain...`);
+
       // Fetch dei dati on-chain
       try {
-        userData = await fetchAaveUserAccountData(address, parsedChainId);
+        userData = await fetchAaveUserAccountData(normalizedAddress, parsedChainId);
         console.log(`[API Aave] Successfully fetched data:`, userData ? 'Data received' : 'No data');
-        
+
         // Salva in cache con TTL di 5 minuti se i dati sono validi
         if (userData) {
           await cache.set(cacheKey, userData, 300);
-          console.log(`[API Aave] 💾 Dati salvati in cache per ${address}`);
+          console.log(`[API Aave] 💾 Dati salvati in cache per ${normalizedAddress}`);
         }
       } catch (error) {
         console.error(`[API Aave] Error in fetchAaveUserAccountData:`, error);
         throw error;
       }
     }
-    
+
     // Se i dati sono stati recuperati (da cache o on-chain), avvia job per aggiornamento health
     if (userData && !fromCache) {
       try {
         const healthJobManager = queueManager.getJobManager(QUEUE_NAMES.AAVE_HEALTH_UPDATE);
         await healthJobManager.addJob('update-user-health', {
-          userAddress: address,
+          userAddress: normalizedAddress,
           chainId: parsedChainId || 42161,
           forceUpdate: false
         }, {
           delay: 1000, // Ritarda di 1 secondo per evitare sovraccarico
           priority: 1
         });
-        console.log(`[API Aave] 📝 Job health aggiornamento aggiunto per ${address}`);
+        console.log(`[API Aave] 📝 Job health aggiornamento aggiunto per ${normalizedAddress}`);
       } catch (error) {
-        console.error(`[API Aave] ⚠️ Errore aggiunta job health per ${address}:`, error);
+        console.error(`[API Aave] ⚠️ Errore aggiunta job health per ${normalizedAddress}:`, error);
         // Non bloccare la risposta per errori di job
       }
     }
@@ -104,7 +138,7 @@ export async function GET(req) {
     // Controllo se i dati sono stati recuperati con successo
     if (!userData) {
       return NextResponse.json(
-        { 
+        {
           error: "Errore nel recupero dei dati",
           message: "Unable to fetch Aave data. Please check: 1) Wallet is connected to Arbitrum, 2) Environment variables are configured, 3) Address has active Aave positions.",
           details: "Check the server logs for more specific error information."

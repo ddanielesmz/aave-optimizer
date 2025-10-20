@@ -1,4 +1,6 @@
 import { initQueueSystem } from './initQueueSystem.js';
+import alertMonitor from './alertMonitor.js';
+import config from '@/config';
 
 // Flag per evitare inizializzazioni multiple
 let initialized = false;
@@ -23,6 +25,15 @@ export async function initializeApp() {
       console.log('[InitApp] ✅ Sistema di code inizializzato');
     } else {
       console.log('[InitApp] ⚠️ Sistema di code disabilitato');
+    }
+
+    // Inizializza sistema di alert Telegram se abilitato
+    if (config.telegram.enabled) {
+      console.log('[InitApp] 🔔 Inizializzazione sistema di alert...');
+      alertMonitor.start();
+      console.log('[InitApp] ✅ Sistema di alert inizializzato');
+    } else {
+      console.log('[InitApp] ⚠️ Sistema di alert disabilitato (TELEGRAM_BOT_TOKEN non configurato)');
     }
 
     initialized = true;
