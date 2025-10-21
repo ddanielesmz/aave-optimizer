@@ -14,7 +14,7 @@ const faqList = [
     question: "How accurate is the real-time data?",
     answer: (
       <p>
-        Our data is updated every few seconds directly from Aave's smart contracts and subgraphs, ensuring you have the most accurate and up-to-date information.
+        Our data is updated every few seconds directly from Aave&apos;s smart contracts and subgraphs, ensuring you have the most accurate and up-to-date information.
       </p>
     ),
   },

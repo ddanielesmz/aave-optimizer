@@ -5,8 +5,12 @@ import StablecoinSupplyOptimizer from "@/components/dashboard/StablecoinSupplyOp
 import StablecoinBorrowOptimizer from "@/components/dashboard/StablecoinBorrowOptimizer";
 import FinancialSummaryWidget from "@/components/dashboard/FinancialSummaryWidget";
 import NetWorthTrendCard from "@/components/dashboard/NetWorthTrendCard";
+import { initializeApp } from "@/libs/initApp";
 
 export const dynamic = "force-dynamic";
+
+// Inizializza automaticamente il sistema di alert quando si accede alla dashboard
+initializeApp().catch(console.error);
 
 // Dashboard con layout 1×4: 1 widget lungo in alto + 3 widget quadrati sotto
 export default function Dashboard() {

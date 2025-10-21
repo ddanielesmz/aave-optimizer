@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import connectMongo from "@/libs/mongoose";
 import Alert from "@/models/Alert";
-import { auth } from "@/libs/auth";
 import { enforceRateLimit, RateLimitError } from "@/libs/rateLimiter";
 
 function getClientIdentifier(req) {
@@ -16,21 +15,12 @@ function getClientIdentifier(req) {
   return req.headers.get("cf-connecting-ip")?.trim() || "anonymous";
 }
 
-// GET - Recupera alert per un widget
+// GET - Recupera alert pubblici (senza autenticazione)
 export async function GET(req) {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 },
-      );
-    }
-
     try {
       await enforceRateLimit({
-        identifier: session.user.id,
+        identifier: getClientIdentifier(req),
         action: "alerts-read",
         limit: 30,
         windowSeconds: 60,
@@ -53,7 +43,7 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const widgetType = searchParams.get("widgetType");
 
-    const query = { createdBy: session.user.id };
+    const query = {};
     if (widgetType) {
       query.widgetType = widgetType;
     }
@@ -70,18 +60,9 @@ export async function GET(req) {
   }
 }
 
-// POST - Crea nuovo alert
+// POST - Crea nuovo alert (senza autenticazione)
 export async function POST(req) {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 },
-      );
-    }
-
     try {
       await enforceRateLimit({
         identifier: getClientIdentifier(req),
@@ -146,7 +127,6 @@ export async function POST(req) {
 
     // Verifica se esiste già un alert con lo stesso nome per questo widget
     const existingAlert = await Alert.findOne({
-      createdBy: session.user.id,
       widgetType,
       alertName,
     });
@@ -159,7 +139,6 @@ export async function POST(req) {
     }
 
     const alert = await Alert.create({
-      createdBy: session.user.id,
       alertName,
       widgetType,
       condition,

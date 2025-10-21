@@ -19,9 +19,17 @@ class TelegramNotifier {
     }
 
     try {
-      // Usa direttamente l'username come chat_id
+      // Prima prova a ottenere il chat ID dall'username
+      let chatId = await this.getChatIdFromUsername(username);
+      
+      // Se non trova il chat ID, prova a usare l'username direttamente
+      if (!chatId) {
+        console.log(`Chat ID non trovato per ${username}, provo con username diretto`);
+        chatId = username;
+      }
+
       const payload = {
-        chat_id: username, // Telegram accetta anche username come chat_id
+        chat_id: chatId,
         text: message,
         parse_mode: "HTML",
         disable_web_page_preview: true,

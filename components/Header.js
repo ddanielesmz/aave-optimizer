@@ -2,13 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import ButtonSignin from "./ButtonSignin";
 import logo from "@/app/icon.png";
 import config from "@/config";
 
-const cta = <ButtonSignin text="Launch Dashboard" extraStyle="btn-primary" />;
-
-// A simple header with logo and CTA button
+// A simple header with logo and direct dashboard link
 const Header = () => {
   return (
     <header className="bg-base-200">
@@ -21,7 +18,7 @@ const Header = () => {
           <Link
             className="flex items-center gap-2 shrink-0 "
             href="/"
-            title={`${config.appName} hompage`}
+            title={`${config.appName} homepage`}
           >
             <Image
               src={logo}
@@ -36,13 +33,19 @@ const Header = () => {
           </Link>
         </div>
         
-        {/* CTA button for mobile */}
+        {/* Direct dashboard link for mobile */}
         <div className="flex lg:hidden">
-          {cta}
+          <Link href="/dashboard" className="btn btn-primary">
+            Launch Dashboard
+          </Link>
         </div>
 
-        {/* CTA button for desktop */}
-        <div className="hidden lg:flex lg:justify-end lg:flex-1">{cta}</div>
+        {/* Direct dashboard link for desktop */}
+        <div className="hidden lg:flex lg:justify-end lg:flex-1">
+          <Link href="/dashboard" className="btn btn-primary">
+            Launch Dashboard
+          </Link>
+        </div>
       </nav>
     </header>
   );

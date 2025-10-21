@@ -1,6 +1,6 @@
 import { withRateLimit, getClientIP } from './rateLimiter.js';
 import { withValidation, schemas } from './validateInput.js';
-import { withCSRFProtection } from './csrfProtection.js';
+// import { withCSRFProtection } from './csrfProtection.js'; // Temporaneamente disabilitato
 import { withJWTAuth, withOptionalJWTAuth } from './jwtSecurity.js';
 import { withStripeWebhookVerification, withResendWebhookVerification } from './verifyWebhook.js';
 
@@ -70,10 +70,10 @@ export function withSecurity(options = {}) {
       middleware = withOptionalJWTAuth(middleware);
     }
 
-    // Apply CSRF protection
-    if (csrf) {
-      middleware = withCSRFProtection(SECURITY_CONFIG.csrfRoutes)(middleware);
-    }
+    // Apply CSRF protection (temporaneamente disabilitato)
+    // if (csrf) {
+    //   middleware = withCSRFProtection(SECURITY_CONFIG.csrfRoutes)(middleware);
+    // }
 
     // Apply input validation
     if (validation) {

@@ -1,7 +1,6 @@
 import Link from "next/link";
-import ButtonSupport from "@/components/ButtonSupport";
 
-// Simple 404 page with a button to go home and a button to contact support
+// Simple 404 page with a button to go home
 // Show a cute SVG with your primary color
 export default function Custom404() {
   return (
@@ -115,8 +114,6 @@ export default function Custom404() {
           </svg>
           Home
         </Link>
-
-        <ButtonSupport />
       </div>
     </section>
   );

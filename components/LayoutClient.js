@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import { useSession } from "next-auth/react";
-import { SessionProvider } from "next-auth/react";
 import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "react-hot-toast";
 import { Tooltip } from "react-tooltip";
@@ -24,11 +22,9 @@ const RainbowProviders = dynamic(() => import("@/components/RainbowProviders"), 
 
 const WALLET_PROVIDER_ROUTES = [/^\/dashboard(\/.*)?$/];
 
-// Crisp customer chat support:
-// This component is separated from ClientLayout because it needs to be wrapped with <SessionProvider> to use useSession() hook
+// Crisp customer chat support (simplified without authentication)
 const CrispChat = () => {
   const pathname = usePathname();
-  const { data } = useSession();
   const [crisp, setCrisp] = useState(null);
   const isConfiguredRef = useRef(false);
   const hideListenerAttachedRef = useRef(false);
@@ -82,22 +78,14 @@ const CrispChat = () => {
     }
   }, [crisp, pathname]);
 
-  // Add User Unique ID to Crisp to easily identify users when reaching support (optional)
-  useEffect(() => {
-    if (data?.user && config?.crisp?.id && crisp) {
-      crisp.session.setData({ userId: data.user.id });
-    }
-  }, [crisp, data]);
-
   return null;
 };
 
 // All the client wrappers are here (they can't be in server components)
-// 1. SessionProvider: Allow the useSession from next-auth (find out if user is auth or not)
-// 2. NextTopLoader: Show a progress bar at the top when navigating between pages
-// 3. Toaster: Show Success/Error messages anywhere from the app with toast()
-// 4. Tooltip: Show tooltips if any JSX elements has these 2 attributes: data-tooltip-id="tooltip" data-tooltip-content=""
-// 5. CrispChat: Set Crisp customer chat support (see above)
+// 1. NextTopLoader: Show a progress bar at the top when navigating between pages
+// 2. Toaster: Show Success/Error messages anywhere from the app with toast()
+// 3. Tooltip: Show tooltips if any JSX elements has these 2 attributes: data-tooltip-id="tooltip" data-tooltip-content=""
+// 4. CrispChat: Set Crisp customer chat support (see above)
 const LayoutShell = ({ children }) => {
   return (
     <>
@@ -137,7 +125,7 @@ const ClientLayout = ({ children }) => {
   }, [pathname]);
 
   return (
-    <SessionProvider>
+    <>
       {needsWalletProviders ? (
         <RainbowProviders>
           <LayoutShell>{children}</LayoutShell>
@@ -145,7 +133,7 @@ const ClientLayout = ({ children }) => {
       ) : (
         <LayoutShell>{children}</LayoutShell>
       )}
-    </SessionProvider>
+    </>
   );
 };
 

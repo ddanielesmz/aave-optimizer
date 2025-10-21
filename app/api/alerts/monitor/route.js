@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import alertMonitor from "@/libs/alertMonitor";
+import { initializeApp } from "@/libs/initApp";
 
 // POST - Avvia il sistema di monitoraggio alert
 export async function POST(req) {
   try {
+    // Inizializza l'app se non è già inizializzata
+    await initializeApp();
+    
     if (alertMonitor.isActive()) {
       return NextResponse.json({ 
         message: "AlertMonitor già attivo",
