@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm install --legacy-peer-deps && next build",
     "postbuild": "next-sitemap",
     "start": "next start",
     "lint": "next lint",
@@ -14,7 +14,8 @@
     "test:mongo": "jest tests/security/mongoSecure.test.js --runInBand",
     "mongo:health": "node scripts/check-mongo-health.js",
     "redis:start": "redis-server",
-    "redis:cli": "redis-cli"
+    "redis:cli": "redis-cli",
+    "vercel-build": "npm install --legacy-peer-deps && next build"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
@@ -52,5 +53,11 @@
     "pino-pretty": "^13.1.2",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.14"
+  },
+  "overrides": {
+    "use-sync-external-store": "^1.2.0"
+  },
+  "resolutions": {
+    "use-sync-external-store": "^1.2.0"
   }
 }

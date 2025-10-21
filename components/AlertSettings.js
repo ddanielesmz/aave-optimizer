@@ -29,14 +29,14 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
     if (isClient) {
       loadAlerts();
     }
-  }, [isClient]);
+  }, [isClient, loadAlerts]);
 
   // Load alerts when modal opens
   useEffect(() => {
     if (isOpen && isClient) {
       loadAlerts();
     }
-  }, [isOpen, isClient]);
+  }, [isOpen, isClient, loadAlerts]);
 
   const loadAlerts = async () => {
     try {
@@ -105,18 +105,6 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
     }
   };
 
-  const getConditionText = (condition) => {
-    switch (condition) {
-      case "greater_than":
-        return "greater than";
-      case "less_than":
-        return "less than";
-      case "equals":
-        return "equals";
-      default:
-        return condition;
-    }
-  };
 
   const getWidgetDisplayName = () => {
     switch (widgetType) {

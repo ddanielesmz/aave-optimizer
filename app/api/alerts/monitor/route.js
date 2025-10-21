@@ -3,7 +3,7 @@ import alertMonitor from "@/libs/alertMonitor";
 import { initializeApp } from "@/libs/initApp";
 
 // POST - Avvia il sistema di monitoraggio alert
-export async function POST(req) {
+export async function POST() {
   try {
     // Inizializza l'app se non è già inizializzata
     await initializeApp();
@@ -32,7 +32,7 @@ export async function POST(req) {
 }
 
 // GET - Verifica stato del sistema di monitoraggio
-export async function GET(req) {
+export async function GET() {
   try {
     return NextResponse.json({ 
       isActive: alertMonitor.isActive(),
