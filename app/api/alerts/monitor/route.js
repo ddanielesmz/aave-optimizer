@@ -49,7 +49,7 @@ export async function GET() {
 }
 
 // DELETE - Ferma il sistema di monitoraggio alert
-export async function DELETE(req) {
+export async function DELETE() {
   try {
     if (!alertMonitor.isActive()) {
       return NextResponse.json({ 

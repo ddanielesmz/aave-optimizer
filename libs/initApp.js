@@ -18,13 +18,13 @@ export async function initializeApp() {
   console.log('[InitApp] 🚀 Inizializzazione applicazione...');
 
   try {
-    // Inizializza sistema di code solo se abilitato
-    if (process.env.QUEUE_ENABLED !== 'false') {
+    // Inizializza sistema di code solo se abilitato e non in produzione
+    if (process.env.QUEUE_ENABLED !== 'false' && process.env.NODE_ENV !== 'production') {
       console.log('[InitApp] ⚡ Inizializzazione sistema di code...');
       await initQueueSystem();
       console.log('[InitApp] ✅ Sistema di code inizializzato');
     } else {
-      console.log('[InitApp] ⚠️ Sistema di code disabilitato');
+      console.log('[InitApp] ⚠️ Sistema di code disabilitato (produzione o configurato)');
     }
 
     // Inizializza sistema di alert Telegram se abilitato

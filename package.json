@@ -55,7 +55,10 @@
     "tailwindcss": "^4.1.14"
   },
   "overrides": {
-    "use-sync-external-store": "^1.2.0"
+    "use-sync-external-store": "^1.2.0",
+    "valtio": {
+      "use-sync-external-store": "^1.2.0"
+    }
   },
   "resolutions": {
     "use-sync-external-store": "^1.2.0"

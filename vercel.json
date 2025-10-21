@@ -8,11 +8,13 @@
     }
   },
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "QUEUE_ENABLED": "false"
   },
   "build": {
     "env": {
-      "NODE_ENV": "production"
+      "NODE_ENV": "production",
+      "QUEUE_ENABLED": "false"
     }
   }
 }
