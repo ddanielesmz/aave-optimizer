@@ -9,6 +9,7 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [togglingAlert, setTogglingAlert] = useState(null); // Track which alert is being toggled
   const [newAlert, setNewAlert] = useState({
     alertName: "",
     condition: "less_than",
@@ -44,6 +45,7 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
       setAlerts(response || []);
     } catch (error) {
       console.error("Error loading alerts:", error);
+      setAlerts([]); // Set empty array on error
     }
   };
 
@@ -78,11 +80,17 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
   };
 
   const toggleAlert = async (alertId, isActive) => {
+    setTogglingAlert(alertId);
     try {
-      await apiClient.patch(`/alerts/${alertId}`, { isActive });
+      console.log("Toggling alert:", { alertId, isActive }); // Debug log
+      const response = await apiClient.patch(`/alerts/${alertId}`, { isActive });
+      console.log("Toggle response:", response); // Debug log
       await loadAlerts();
     } catch (error) {
       console.error("Error updating alert:", error);
+      alert(`Error updating alert: ${error.message || 'Unknown error'}`);
+    } finally {
+      setTogglingAlert(null);
     }
   };
 
@@ -157,6 +165,20 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
       
       default:
         return 'text-primary'; // Default color for other widget types
+    }
+  };
+
+  // Get threshold placeholder based on widget type
+  const getThresholdPlaceholder = () => {
+    switch (widgetType) {
+      case 'healthFactor':
+        return 'For example: 1.5';
+      case 'ltv':
+        return 'For example: 0.4550 (45.5%)';
+      case 'netAPY':
+        return '5.0 (APY %)';
+      default:
+        return '0.0000';
     }
   };
 
@@ -257,6 +279,7 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
                           type="checkbox"
                           checked={alert.isActive}
                           onChange={(e) => toggleAlert(alert._id || alert.id, e.target.checked)}
+                          disabled={togglingAlert === (alert._id || alert.id)}
                           className="toggle toggle-xs toggle-primary"
                         />
                         <button
@@ -310,7 +333,7 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
                 <div className="form-control">
                   <input
                     type="text"
-                    placeholder="Threshold"
+                    placeholder={getThresholdPlaceholder()}
                     value={newAlert.threshold}
                     onChange={(e) => {
                       const value = e.target.value;
