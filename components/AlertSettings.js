@@ -140,9 +140,9 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
 
   return (
     <>
-      {/* Alert Button - Consistent with InfoButton style */}
+      {/* Alert Button - Clean bell icon */}
       <button
-        className="btn btn-circle btn-ghost btn-xs text-base-content/60 hover:text-base-content hover:bg-base-200"
+        className="btn btn-circle btn-ghost btn-xs text-base-content/60 hover:text-primary hover:bg-primary/10 transition-all duration-200"
         onClick={() => setIsOpen(true)}
         title={`Configure alerts for ${getWidgetDisplayName()}`}
       >
@@ -156,7 +156,13 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
             strokeLinecap="round" 
             strokeLinejoin="round" 
             strokeWidth="2" 
-            d="M15 17h5l-5 5v-5zM4.828 7l2.586-2.586a2 2 0 012.828 0L12 6l1.586-1.586a2 2 0 012.828 0L19 7v10a2 2 0 01-2 2H6a2 2 0 01-2-2V7zM4 7h16M8 11h8M8 15h4"
+            d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9z"
+          />
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth="2" 
+            d="M13.73 21a2 2 0 01-3.46 0"
           />
         </svg>
       </button>
