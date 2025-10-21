@@ -136,6 +136,30 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
     }
   };
 
+  // Get color based on widget type and current value
+  const getCurrentValueColor = () => {
+    if (!currentValue || currentValue === null) return 'text-base-content/60';
+    
+    switch (widgetType) {
+      case 'healthFactor':
+        if (currentValue === Infinity) return 'text-success';
+        if (currentValue >= 2.0) return 'text-success'; // Safe
+        if (currentValue >= 1.5) return 'text-yellow-500'; // Caution
+        if (currentValue >= 1.1) return 'text-orange-500'; // Risk
+        return 'text-error'; // Liquidation
+      
+      case 'ltv':
+        // For LTV, we need to determine color based on percentage ranges
+        if (currentValue <= 50) return 'text-success'; // Safe
+        if (currentValue < 70) return 'text-warning'; // Caution
+        if (currentValue < 85) return 'text-warning'; // Risk
+        return 'text-error'; // Liquidation
+      
+      default:
+        return 'text-primary'; // Default color for other widget types
+    }
+  };
+
   if (!isClient) return null;
 
   return (
@@ -172,79 +196,72 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setIsOpen(false)}
           />
           
-          {/* Modal Card - Consistent with dashboard style */}
-          <div className="relative bg-base-100 rounded-2xl border border-base-300 shadow-xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+          {/* Modal Card - Clean and minimal */}
+          <div className="relative bg-base-100 rounded-xl border border-base-300 shadow-2xl p-5 w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto">
             {/* Header */}
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-5">
               <div className="flex items-center gap-2">
-                <h3 className="text-base-content font-semibold tracking-tight">
-                  Alert Settings
-                </h3>
-                <span className="badge badge-outline badge-sm">{getWidgetDisplayName()}</span>
+                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.73 21a2 2 0 01-3.46 0" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-base-content font-semibold text-sm">Alert Settings</h3>
+                  <p className="text-xs text-base-content/60">{getWidgetDisplayName()}</p>
+                </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="btn btn-square btn-ghost btn-sm"
+                className="btn btn-ghost btn-sm btn-circle hover:bg-base-200"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="w-5 h-5"
-                >
-                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            {/* Current Value Display */}
-            <div className="mb-6 p-4 bg-base-200 rounded-xl border border-base-300">
+            {/* Current Value Display - Compact with dynamic color */}
+            <div className="mb-4 p-3 bg-base-200/50 rounded-lg border border-base-300/50">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-base-content/70 font-medium">Current Value:</span>
-                <span className="font-semibold text-base-content text-lg">
+                <span className="text-xs text-base-content/70 font-medium">Current Value</span>
+                <span className={`font-semibold text-sm ${getCurrentValueColor()}`}>
                   {currentValue?.toFixed(4) || "N/A"}
                 </span>
               </div>
             </div>
 
-            {/* Existing Alerts */}
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-base-content mb-3">Configured Alerts:</h4>
-              {alerts.length === 0 ? (
-                <div className="text-center py-6 text-base-content/60">
-                  <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-5 5v-5zM4.828 7l2.586-2.586a2 2 0 012.828 0L12 6l1.586-1.586a2 2 0 012.828 0L19 7v10a2 2 0 01-2 2H6a2 2 0 01-2-2V7zM4 7h16M8 11h8M8 15h4" />
-                  </svg>
-                  <p className="text-sm">No alerts configured</p>
-                  <p className="text-xs text-base-content/40 mt-1">Debug: {alerts.length} alerts loaded</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
+            {/* Existing Alerts - Compact */}
+            {alerts.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-xs font-medium text-base-content/70 mb-2 uppercase tracking-wide">Active Alerts</h4>
+                <div className="space-y-2">
                   {alerts.map((alert, index) => (
                     <div
                       key={alert._id || alert.id || `alert-${index}`}
-                      className="flex items-center justify-between p-4 bg-base-200 rounded-xl border border-base-300"
+                      className="flex items-center justify-between p-3 bg-base-200/50 rounded-lg border border-base-300/50"
                     >
-                      <div className="flex-1">
-                        <div className="font-medium text-sm text-base-content">{alert.alertName}</div>
-                        <div className="text-xs text-base-content/70 mt-1">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-xs text-base-content truncate">{alert.alertName}</div>
+                        <div className="text-xs text-base-content/60 mt-0.5">
                           {getConditionSymbol(alert.condition)} {alert.threshold} • @{alert.telegramUsername.replace('@', '')}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 ml-2">
                         <input
                           type="checkbox"
                           checked={alert.isActive}
                           onChange={(e) => toggleAlert(alert._id || alert.id, e.target.checked)}
-                          className="toggle toggle-sm toggle-primary"
+                          className="toggle toggle-xs toggle-primary"
                         />
                         <button
                           onClick={() => deleteAlert(alert._id || alert.id)}
-                          className="btn btn-ghost btn-xs text-error hover:bg-error/10"
+                          className="btn btn-ghost btn-xs text-error hover:bg-error/10 p-1"
                         >
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -254,119 +271,105 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-
-            {/* New Alert Form */}
-            <form onSubmit={createAlert} className="space-y-4">
-              <h4 className="text-sm font-medium text-base-content">Create New Alert:</h4>
-              
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text text-xs font-medium">Alert Name</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g., Critical Health Factor"
-                  value={newAlert.alertName}
-                  onChange={(e) => setNewAlert({ ...newAlert, alertName: e.target.value })}
-                  className="input input-bordered input-sm w-full focus:input-primary"
-                  required
-                />
               </div>
+            )}
 
-              <div className="grid grid-cols-2 gap-3">
+            {/* New Alert Form - Compact */}
+            <form onSubmit={createAlert} className="space-y-3">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 bg-primary rounded-full"></div>
+                <h4 className="text-xs font-medium text-base-content/70 uppercase tracking-wide">Create Alert</h4>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2">
                 <div className="form-control">
-                  <label className="label">
-                    <span className="label-text text-xs font-medium">Condition</span>
-                  </label>
+                  <input
+                    type="text"
+                    placeholder="Alert name"
+                    value={newAlert.alertName}
+                    onChange={(e) => setNewAlert({ ...newAlert, alertName: e.target.value })}
+                    className="input input-bordered input-xs w-full focus:input-primary"
+                    required
+                  />
+                </div>
+                
+                <div className="form-control">
                   <select
                     value={newAlert.condition}
                     onChange={(e) => setNewAlert({ ...newAlert, condition: e.target.value })}
-                    className="select select-bordered select-sm focus:select-primary"
+                    className="select select-bordered select-xs focus:select-primary"
                   >
                     <option value="less_than">Less than</option>
                     <option value="greater_than">Greater than</option>
                     <option value="equals">Equals</option>
                   </select>
                 </div>
-                
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
                 <div className="form-control">
-                  <label className="label">
-                    <span className="label-text text-xs font-medium">Threshold</span>
-                  </label>
                   <input
                     type="text"
-                    placeholder="0.0000"
+                    placeholder="Threshold"
                     value={newAlert.threshold}
                     onChange={(e) => {
                       const value = e.target.value;
-                      // Allow empty string, numbers, and decimal point
                       if (value === '' || /^\d*\.?\d*$/.test(value)) {
                         setNewAlert({ ...newAlert, threshold: value });
                       }
                     }}
-                    className="input input-bordered input-sm focus:input-primary"
+                    className="input input-bordered input-xs focus:input-primary"
+                    required
+                  />
+                </div>
+                
+                <div className="form-control">
+                  <input
+                    type="text"
+                    placeholder="@username"
+                    value={newAlert.telegramUsername}
+                    onChange={(e) => setNewAlert({ ...newAlert, telegramUsername: e.target.value })}
+                    className="input input-bordered input-xs focus:input-primary"
                     required
                   />
                 </div>
               </div>
 
               <div className="form-control">
-                <label className="label">
-                  <span className="label-text text-xs font-medium">Telegram Username</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="@username"
-                  value={newAlert.telegramUsername}
-                  onChange={(e) => setNewAlert({ ...newAlert, telegramUsername: e.target.value })}
-                  className="input input-bordered input-sm w-full focus:input-primary"
-                  required
-                />
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text text-xs font-medium">Custom Message (Optional)</span>
-                </label>
                 <textarea
-                  placeholder="Message you'll receive with the alert..."
+                  placeholder="Custom message (optional)"
                   value={newAlert.customMessage}
                   onChange={(e) => setNewAlert({ ...newAlert, customMessage: e.target.value })}
-                  className="textarea textarea-bordered textarea-sm w-full focus:textarea-primary"
-                  rows={2}
+                  className="textarea textarea-bordered textarea-xs w-full focus:textarea-primary resize-none"
+                  rows={1}
                 />
               </div>
 
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text text-xs font-medium">Cooldown (minutes)</span>
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="1440"
-                  value={newAlert.cooldownMinutes}
-                  onChange={(e) => setNewAlert({ ...newAlert, cooldownMinutes: parseInt(e.target.value) || 60 })}
-                  className="input input-bordered input-sm w-full focus:input-primary"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="btn btn-primary btn-sm w-full mt-4"
-              >
-                {isLoading ? (
-                  <>
+              <div className="flex items-center gap-2">
+                <div className="form-control flex-1">
+                  <input
+                    type="number"
+                    min="1"
+                    max="1440"
+                    placeholder="Cooldown (min)"
+                    value={newAlert.cooldownMinutes}
+                    onChange={(e) => setNewAlert({ ...newAlert, cooldownMinutes: parseInt(e.target.value) || 60 })}
+                    className="input input-bordered input-xs focus:input-primary"
+                  />
+                </div>
+                
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="btn btn-primary btn-xs px-4"
+                >
+                  {isLoading ? (
                     <span className="loading loading-spinner loading-xs"></span>
-                    Creating...
-                  </>
-                ) : (
-                  "Create Alert"
-                )}
-              </button>
+                  ) : (
+                    "Create"
+                  )}
+                </button>
+              </div>
             </form>
           </div>
         </div>,
