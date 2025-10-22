@@ -27,6 +27,12 @@ let redisInstance = null;
  * @returns {Redis} Istanza Redis
  */
 export function getRedis() {
+  // Se siamo in produzione, restituisci un mock per evitare errori
+  if (process.env.NODE_ENV === 'production' || process.env.QUEUE_ENABLED === 'false') {
+    console.log('[Redis] ⚠️ Redis disabilitato in produzione');
+    return null;
+  }
+
   if (!redisInstance) {
     redisInstance = new Redis(redisConfig);
     

@@ -6,6 +6,12 @@ import { getRedis } from './redis.js';
  * Da chiamare nel file di configurazione principale o nel middleware
  */
 export async function initQueueSystem() {
+  // Se siamo in produzione o il sistema è disabilitato, non inizializzare nulla
+  if (process.env.NODE_ENV === 'production' || process.env.QUEUE_ENABLED === 'false') {
+    console.log('[InitQueueSystem] ⚠️ Sistema di code disabilitato in produzione');
+    return null;
+  }
+
   try {
     console.log('[InitQueueSystem] 🚀 Inizializzazione sistema di code...');
     
@@ -35,6 +41,11 @@ export async function initQueueSystem() {
  * Verifica se il sistema di code è disponibile
  */
 export async function isQueueSystemAvailable() {
+  // Se siamo in produzione, il sistema non è disponibile
+  if (process.env.NODE_ENV === 'production' || process.env.QUEUE_ENABLED === 'false') {
+    return false;
+  }
+
   try {
     const redis = getRedis();
     await redis.ping();
@@ -48,6 +59,14 @@ export async function isQueueSystemAvailable() {
  * Ottiene statistiche del sistema di code
  */
 export async function getQueueSystemStats() {
+  // Se siamo in produzione, restituisci informazioni di disabilitazione
+  if (process.env.NODE_ENV === 'production' || process.env.QUEUE_ENABLED === 'false') {
+    return {
+      error: 'Sistema di code disabilitato in produzione',
+      timestamp: new Date().toISOString()
+    };
+  }
+
   try {
     const { getQueueManager } = await import('./queueManager.js');
     const queueManager = getQueueManager();
