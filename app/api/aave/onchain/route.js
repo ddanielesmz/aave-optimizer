@@ -53,7 +53,7 @@ export async function GET(req) {
       await enforceRateLimit({
         identifier: `${getClientIdentifier(req)}:${address.toLowerCase()}`,
         action: "aave-onchain",
-        limit: 6,
+        limit: 30,
         windowSeconds: 60,
       });
     } catch (error) {

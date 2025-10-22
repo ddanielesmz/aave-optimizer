@@ -32,7 +32,7 @@ export async function POST(req) {
       await enforceRateLimit({
         identifier: getClientIdentifier(req),
         action: "aave-subgraph",
-        limit: 10,
+        limit: 50,
         windowSeconds: 60,
       });
     } catch (error) {

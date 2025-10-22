@@ -22,7 +22,7 @@ export async function GET(req) {
       await enforceRateLimit({
         identifier: getClientIdentifier(req),
         action: "alerts-read",
-        limit: 30,
+        limit: 100,
         windowSeconds: 60,
       });
     } catch (error) {
@@ -67,7 +67,7 @@ export async function POST(req) {
       await enforceRateLimit({
         identifier: getClientIdentifier(req),
         action: "alerts-write",
-        limit: 5,
+        limit: 20,
         windowSeconds: 60,
       });
     } catch (error) {
