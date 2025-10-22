@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAccount, useChainId } from "wagmi";
 import { createPublicClient, http, formatUnits } from "viem";
 import { 
@@ -237,7 +237,7 @@ export default function NetMetrics() {
   };
 
   // Funzione per calcolare Net Worth e Net APY
-  const calculateNetMetrics = async () => {
+  const calculateNetMetrics = useCallback(async () => {
     console.log('[NetMetrics] calculateNetMetrics called with:', {
       address,
       chainId,
@@ -491,7 +491,7 @@ export default function NetMetrics() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [address, chainId, isConnected, mounted]);
 
   // Gestisci il mounting per evitare hydration mismatch
   useEffect(() => {
@@ -520,7 +520,7 @@ export default function NetMetrics() {
       setBorrowPositions([]);
       setError(null);
     }
-  }, [mounted, isClient, isConnected, address, chainId]);
+  }, [mounted, isClient, isConnected, address, chainId, calculateNetMetrics]);
 
   // Debug: log dello stato attuale (solo in caso di errori)
   if (error) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAccount, useChainId } from "wagmi";
 import { formatUnits } from "viem";
 import InfoButton from "@/components/InfoButton";
@@ -110,7 +110,7 @@ export default function NetAPYCard({
   const hasData = data.netWorth !== 0 && (data.supplies?.length > 0 || data.borrows?.length > 0);
   
   // Funzione per fetchare i dati Aave per Health Factor
-  const fetchAaveData = async () => {
+  const fetchAaveData = useCallback(async () => {
     if (!address) return;
     
     setIsLoadingHF(true);
@@ -145,7 +145,7 @@ export default function NetAPYCard({
     } finally {
       setIsLoadingHF(false);
     }
-  };
+  }, [address, chainId]);
 
   // Gestisci il mounting
   useEffect(() => {
@@ -157,7 +157,7 @@ export default function NetAPYCard({
     if (isClient && isConnected && address) {
       fetchAaveData();
     }
-  }, [isClient, isConnected, address, chainId]);
+  }, [isClient, isConnected, address, chainId, fetchAaveData]);
 
   // Funzione per aggiornare i dati
   const handleRefresh = async () => {
