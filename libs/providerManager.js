@@ -16,8 +16,8 @@ function getEnvVar(key, defaultValue) {
 // Carica le variabili d'ambiente solo in Node.js
 if (!isBrowser) {
   try {
-    const dotenv = await import('dotenv');
-    dotenv.config();
+    // Usa require invece di import dinamico per evitare topLevelAwait
+    require('dotenv').config();
   } catch (error) {
     console.warn('dotenv non disponibile in questo ambiente');
   }

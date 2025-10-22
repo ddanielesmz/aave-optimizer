@@ -2,7 +2,6 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAaveUserAccountDataRealtime } from '@/libs/useAaveData';
-import { useAccount } from 'wagmi';
 import { WidgetErrorBoundary } from '@/components/ErrorBoundaryOptimized';
 import InfoButton from '@/components/InfoButton';
 import StatusBadge from '@/components/StatusBadge';
@@ -11,7 +10,6 @@ import AlertSettings from '@/components/AlertSettings';
 // Card that shows the user's current Loan-to-Value (LTV) from Aave with UI matching the screenshot
 export default function CurrentLTVWidget() {
   const { userAccountData, isLoading, error, lastUpdated, refetch } = useAaveUserAccountDataRealtime(15000);
-  const { chainId } = useAccount();
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Ensure initial server render matches the initial client render to avoid hydration mismatches

@@ -8,7 +8,6 @@ import InfoButton from '@/components/InfoButton';
 import AlertSettings from '@/components/AlertSettings';
 
 const AaveHealthWidget = memo(() => {
-  const { chainId } = useAccount();
   const { 
     healthFactor, 
     isLoading, 
