@@ -33,8 +33,7 @@ export default function CurrentLTVWidget() {
     };
   }, [userAccountData]);
 
-  // Removed network name display per design optimization
-
+  // Calculate LTV status based on the computed values
   const ltvStatus = useMemo(() => {
     if (ltvPercent == null) return { label: '—', color: 'text-base-content', bar: 'bg-primary' };
 

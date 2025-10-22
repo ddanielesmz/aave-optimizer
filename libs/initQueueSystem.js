@@ -6,9 +6,18 @@ import { getRedis } from './redis.js';
  * Da chiamare nel file di configurazione principale o nel middleware
  */
 export async function initQueueSystem() {
-  // Se siamo in produzione o il sistema è disabilitato, non inizializzare nulla
-  if (process.env.NODE_ENV === 'production' || process.env.QUEUE_ENABLED === 'false') {
-    console.log('[InitQueueSystem] ⚠️ Sistema di code disabilitato in produzione');
+  // Se siamo in produzione ma abbiamo Upstash configurato, abilita il sistema
+  const hasUpstashConfig = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
+  
+  // Se siamo in produzione senza Upstash, disabilita il sistema
+  if (process.env.NODE_ENV === 'production' && !hasUpstashConfig) {
+    console.log('[InitQueueSystem] ⚠️ Sistema di code disabilitato in produzione (Upstash non configurato)');
+    return null;
+  }
+  
+  // Se il sistema è esplicitamente disabilitato
+  if (process.env.QUEUE_ENABLED === 'false') {
+    console.log('[InitQueueSystem] ⚠️ Sistema di code disabilitato manualmente');
     return null;
   }
 
@@ -41,8 +50,16 @@ export async function initQueueSystem() {
  * Verifica se il sistema di code è disponibile
  */
 export async function isQueueSystemAvailable() {
-  // Se siamo in produzione, il sistema non è disponibile
-  if (process.env.NODE_ENV === 'production' || process.env.QUEUE_ENABLED === 'false') {
+  // Se siamo in produzione ma abbiamo Upstash configurato, abilita il sistema
+  const hasUpstashConfig = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
+  
+  // Se siamo in produzione senza Upstash, il sistema non è disponibile
+  if (process.env.NODE_ENV === 'production' && !hasUpstashConfig) {
+    return false;
+  }
+  
+  // Se il sistema è esplicitamente disabilitato
+  if (process.env.QUEUE_ENABLED === 'false') {
     return false;
   }
 
@@ -59,10 +76,21 @@ export async function isQueueSystemAvailable() {
  * Ottiene statistiche del sistema di code
  */
 export async function getQueueSystemStats() {
-  // Se siamo in produzione, restituisci informazioni di disabilitazione
-  if (process.env.NODE_ENV === 'production' || process.env.QUEUE_ENABLED === 'false') {
+  // Se siamo in produzione ma abbiamo Upstash configurato, abilita il sistema
+  const hasUpstashConfig = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
+  
+  // Se siamo in produzione senza Upstash, restituisci informazioni di disabilitazione
+  if (process.env.NODE_ENV === 'production' && !hasUpstashConfig) {
     return {
-      error: 'Sistema di code disabilitato in produzione',
+      error: 'Sistema di code disabilitato in produzione (Upstash non configurato)',
+      timestamp: new Date().toISOString()
+    };
+  }
+  
+  // Se il sistema è esplicitamente disabilitato
+  if (process.env.QUEUE_ENABLED === 'false') {
+    return {
+      error: 'Sistema di code disabilitato manualmente',
       timestamp: new Date().toISOString()
     };
   }

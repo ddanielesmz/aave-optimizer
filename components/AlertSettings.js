@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import apiClient from "@/libs/api";
 
@@ -24,6 +24,17 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
     setIsClient(true);
   }, []);
 
+  const loadAlerts = useCallback(async () => {
+    try {
+      const response = await apiClient.get(`/alerts?widgetType=${widgetType}`);
+      console.log("Alert response:", response); // Debug log
+      setAlerts(response || []);
+    } catch (error) {
+      console.error("Error loading alerts:", error);
+      setAlerts([]); // Set empty array on error
+    }
+  }, [widgetType]);
+
   // Load existing alerts
   useEffect(() => {
     if (isClient) {
@@ -37,17 +48,6 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
       loadAlerts();
     }
   }, [isOpen, isClient, loadAlerts]);
-
-  const loadAlerts = async () => {
-    try {
-      const response = await apiClient.get(`/alerts?widgetType=${widgetType}`);
-      console.log("Alert response:", response); // Debug log
-      setAlerts(response || []);
-    } catch (error) {
-      console.error("Error loading alerts:", error);
-      setAlerts([]); // Set empty array on error
-    }
-  };
 
   const createAlert = async (e) => {
     e.preventDefault();
@@ -134,7 +134,7 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
 
   // Get color based on widget type and current value
   const getCurrentValueColor = () => {
-    if (!currentValue || currentValue === null) return 'text-base-content/60';
+    if (currentValue === null || currentValue === undefined || isNaN(currentValue)) return 'text-base-content/60';
     
     switch (widgetType) {
       case 'healthFactor':
@@ -150,7 +150,7 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
         if (currentValue < 70) return 'text-warning'; // Caution
         if (currentValue < 85) return 'text-warning'; // Risk
         return 'text-error'; // Liquidation
-      
+
       default:
         return 'text-primary'; // Default color for other widget types
     }
@@ -241,7 +241,9 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
               <div className="flex justify-between items-center">
                 <span className="text-xs text-base-content/70 font-medium">Current Value</span>
                 <span className={`font-semibold text-sm ${getCurrentValueColor()}`}>
-                  {currentValue?.toFixed(4) || "N/A"}
+                  {currentValue !== null && currentValue !== undefined && !isNaN(currentValue) 
+                    ? currentValue.toFixed(4) 
+                    : "N/A"}
                 </span>
               </div>
             </div>

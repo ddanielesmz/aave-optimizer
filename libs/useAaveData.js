@@ -354,7 +354,7 @@ export function useAaveBorrowOptimization() {
 export function useAaveHealthFactor() {
   const { address, chainId } = useAccount();
   const [data, setData] = useState({
-    healthFactor: 0,
+    healthFactor: null,
     isLoading: true,
     error: null,
     lastUpdated: null

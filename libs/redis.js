@@ -2,9 +2,9 @@ import Redis from 'ioredis';
 
 // Configurazione Redis con supporto multi-environment
 const redisConfig = {
-  host: process.env.REDIS_HOST || 'localhost',
+  host: process.env.REDIS_HOST || process.env.UPSTASH_REDIS_REST_URL || 'localhost',
   port: parseInt(process.env.REDIS_PORT) || 6379,
-  password: process.env.REDIS_PASSWORD || undefined,
+  password: process.env.REDIS_PASSWORD || process.env.UPSTASH_REDIS_REST_TOKEN || undefined,
   db: parseInt(process.env.REDIS_DB) || 0,
   retryDelayOnFailover: 100,
   maxRetriesPerRequest: 3,
@@ -14,7 +14,7 @@ const redisConfig = {
   commandTimeout: 5000,
   // Configurazione per produzione
   ...(process.env.NODE_ENV === 'production' && {
-    tls: process.env.REDIS_TLS === 'true' ? {} : undefined,
+    tls: process.env.REDIS_TLS === 'true' || process.env.UPSTASH_REDIS_REST_URL ? {} : undefined,
     family: 4, // IPv4
   })
 };
@@ -27,9 +27,12 @@ let redisInstance = null;
  * @returns {Redis} Istanza Redis
  */
 export function getRedis() {
-  // Se siamo in produzione, restituisci un mock per evitare errori
-  if (process.env.NODE_ENV === 'production' || process.env.QUEUE_ENABLED === 'false') {
-    console.log('[Redis] ⚠️ Redis disabilitato in produzione');
+  // Se siamo in produzione ma abbiamo Upstash configurato, abilita Redis
+  const hasUpstashConfig = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
+  
+  // Se siamo in produzione senza Upstash, disabilita Redis
+  if (process.env.NODE_ENV === 'production' && !hasUpstashConfig) {
+    console.log('[Redis] ⚠️ Redis disabilitato in produzione (Upstash non configurato)');
     return null;
   }
 
