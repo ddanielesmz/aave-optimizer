@@ -337,7 +337,7 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
                     {/* Steps */}
                     <div className="space-y-1 mb-3">
                       <div className="text-xs text-blue-600 dark:text-blue-400">
-                        1. Click "Open Telegram Bot" below
+                        1. Click &quot;Open Telegram Bot&quot; below
                       </div>
                       <div className="text-xs text-blue-600 dark:text-blue-400">
                         2. Send <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">/start</code> to the bot to begin
@@ -346,7 +346,7 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
                         3. Enter your Telegram username in the field below
                       </div>
                       <div className="text-xs text-blue-600 dark:text-blue-400">
-                        4. Click "Test Connection" to verify
+                        4. Click &quot;Test Connection&quot; to verify
                       </div>
                     </div>
                     
