@@ -17,8 +17,8 @@ export const SECURITY_ENV_VARS = {
   // MongoDB Security
   MONGODB_URI: {
     required: true,
-    description: 'MongoDB connection URI with TLS enabled (include username:password@ before cluster)',
-    example: 'mongodb+srv://cluster.mongodb.net/database?retryWrites=true&w=majority&tls=true',
+    description: 'MongoDB connection URI with TLS enabled (format: mongodb+srv://[credentials]@cluster.mongodb.net/database?retryWrites=true&w=majority&tls=true)',
+    example: 'Set your MongoDB Atlas connection string here',
     validation: (uri) => uri.includes('ssl=true') || uri.includes('tls=true')
   },
 
