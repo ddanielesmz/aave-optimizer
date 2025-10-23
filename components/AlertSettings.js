@@ -10,6 +10,9 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [togglingAlert, setTogglingAlert] = useState(null); // Track which alert is being toggled
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState(null); // 'success', 'error', null
+  const [showTelegramGuide, setShowTelegramGuide] = useState(true);
   const [newAlert, setNewAlert] = useState({
     alertName: "",
     condition: "less_than",
@@ -23,6 +26,19 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Load saved Telegram username from localStorage
+  useEffect(() => {
+    if (isClient) {
+      const savedUsername = localStorage.getItem('telegramUsername');
+      if (savedUsername) {
+        setNewAlert(prev => ({
+          ...prev,
+          telegramUsername: savedUsername
+        }));
+      }
+    }
+  }, [isClient]);
 
   const loadAlerts = useCallback(async () => {
     try {
@@ -102,6 +118,44 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
       await loadAlerts();
     } catch (error) {
       console.error("Error deleting alert:", error);
+    }
+  };
+
+  const testTelegramConnection = async () => {
+    if (!newAlert.telegramUsername.trim()) {
+      alert("Please enter your Telegram username first");
+      return;
+    }
+
+    // Save username to localStorage
+    localStorage.setItem('telegramUsername', newAlert.telegramUsername);
+
+    setIsTestingConnection(true);
+    setConnectionStatus(null);
+
+    try {
+      const response = await apiClient.post("/alerts/test-telegram", {
+        telegramUsername: newAlert.telegramUsername.replace(/^@+/, ""),
+        testMessage: `✅ Connection successful! You will now receive ${getWidgetDisplayName()} alerts from Aave Optimizer Dashboard.`
+      });
+
+      if (response.success) {
+        setConnectionStatus('success');
+        // Hide guide after successful connection
+        setTimeout(() => {
+          setConnectionStatus(null);
+          setShowTelegramGuide(false);
+        }, 2000);
+      } else {
+        setConnectionStatus('error');
+        setTimeout(() => setConnectionStatus(null), 3000);
+      }
+    } catch (error) {
+      console.error("Error testing Telegram connection:", error);
+      setConnectionStatus('error');
+      setTimeout(() => setConnectionStatus(null), 3000);
+    } finally {
+      setIsTestingConnection(false);
     }
   };
 
@@ -248,6 +302,104 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
               </div>
             </div>
 
+            {/* Telegram Setup Guide */}
+            {showTelegramGuide && (
+              <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-start gap-3">
+                  {/* Telegram Icon */}
+                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                    </svg>
+                  </div>
+                  
+                  {/* Guide Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                        Configure Telegram to receive notifications
+                      </h4>
+                      <button
+                        onClick={() => setShowTelegramGuide(false)}
+                        className="btn btn-ghost btn-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 dark:hover:bg-blue-800 p-1"
+                        title="Hide this guide"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    <p className="text-xs text-blue-700 dark:text-blue-300 mb-3">
+                      To receive alerts on Telegram, you need to configure the bot first:
+                    </p>
+                    
+                    {/* Steps */}
+                    <div className="space-y-1 mb-3">
+                      <div className="text-xs text-blue-600 dark:text-blue-400">
+                        1. Click "Open Telegram Bot" below
+                      </div>
+                      <div className="text-xs text-blue-600 dark:text-blue-400">
+                        2. Send <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">/start</code> to the bot to begin
+                      </div>
+                      <div className="text-xs text-blue-600 dark:text-blue-400">
+                        3. Enter your Telegram username in the field below
+                      </div>
+                      <div className="text-xs text-blue-600 dark:text-blue-400">
+                        4. Click "Test Connection" to verify
+                      </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      <a
+                        href="https://t.me/AaveOptimizerBot"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-sm btn-primary bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600 text-white"
+                      >
+                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                        </svg>
+                        Open Telegram Bot
+                      </a>
+                      
+                      <button
+                        onClick={testTelegramConnection}
+                        disabled={isTestingConnection || !newAlert.telegramUsername.trim()}
+                        className={`btn btn-sm ${
+                          connectionStatus === 'success' 
+                            ? 'btn-success' 
+                            : connectionStatus === 'error' 
+                            ? 'btn-error' 
+                            : 'btn-outline'
+                        }`}
+                      >
+                        {isTestingConnection ? (
+                          <span className="loading loading-spinner loading-xs"></span>
+                        ) : connectionStatus === 'success' ? (
+                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : connectionStatus === 'error' ? (
+                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        ) : (
+                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        )}
+                        {connectionStatus === 'success' ? 'Connected!' : 
+                         connectionStatus === 'error' ? 'Error' : 
+                         'Test Connection'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Existing Alerts - Compact */}
             {alerts.length > 0 && (
               <div className="mb-4">
@@ -289,9 +441,24 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
 
             {/* New Alert Form - Compact */}
             <form onSubmit={createAlert} className="space-y-3">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 bg-primary rounded-full"></div>
-                <h4 className="text-xs font-medium text-base-content/70 uppercase tracking-wide">Create Alert</h4>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-4 bg-primary rounded-full"></div>
+                  <h4 className="text-xs font-medium text-base-content/70 uppercase tracking-wide">Create Alert</h4>
+                </div>
+                {!showTelegramGuide && (
+                  <button
+                    type="button"
+                    onClick={() => setShowTelegramGuide(true)}
+                    className="btn btn-ghost btn-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    title="Show Telegram setup guide"
+                  >
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                    </svg>
+                    Show Telegram Guide
+                  </button>
+                )}
               </div>
               
               <div className="grid grid-cols-2 gap-2">
@@ -341,7 +508,14 @@ const AlertSettings = ({ widgetType, currentValue, widgetName }) => {
                     type="text"
                     placeholder="@username"
                     value={newAlert.telegramUsername}
-                    onChange={(e) => setNewAlert({ ...newAlert, telegramUsername: e.target.value })}
+                    onChange={(e) => {
+                      const username = e.target.value;
+                      setNewAlert({ ...newAlert, telegramUsername: username });
+                      // Save to localStorage as user types
+                      if (username.trim()) {
+                        localStorage.setItem('telegramUsername', username);
+                      }
+                    }}
                     className="input input-bordered input-xs focus:input-primary"
                     required
                   />

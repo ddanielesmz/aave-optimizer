@@ -7,6 +7,42 @@ class TelegramNotifier {
   }
 
   /**
+   * Invia un messaggio Telegram usando chat ID
+   * @param {string|number} chatId - Chat ID dell'utente
+   * @param {string} message - Messaggio da inviare
+   * @param {Object} options - Opzioni aggiuntive
+   */
+  async sendMessage(chatId, message, options = {}) {
+    if (!this.botToken) {
+      console.error("TELEGRAM_BOT_TOKEN non configurato");
+      return { success: false, error: "Bot token non configurato" };
+    }
+
+    try {
+      const payload = {
+        chat_id: chatId,
+        text: message,
+        parse_mode: "HTML",
+        disable_web_page_preview: true,
+        ...options,
+      };
+
+      const response = await axios.post(`${this.baseUrl}/sendMessage`, payload);
+      
+      return {
+        success: true,
+        messageId: response.data.result.message_id,
+      };
+    } catch (error) {
+      console.error("Error sending Telegram message:", error.response?.data || error.message);
+      return {
+        success: false,
+        error: error.response?.data?.description || error.message,
+      };
+    }
+  }
+
+  /**
    * Invia una notifica Telegram usando username
    * @param {string} username - Username Telegram (es. @username)
    * @param {string} message - Messaggio da inviare
@@ -24,7 +60,6 @@ class TelegramNotifier {
       
       // Se non trova il chat ID, prova a usare l'username direttamente
       if (!chatId) {
-        console.log(`Chat ID non trovato per ${username}, provo con username diretto`);
         chatId = username;
       }
 
@@ -43,7 +78,7 @@ class TelegramNotifier {
         messageId: response.data.result.message_id,
       };
     } catch (error) {
-      console.error("Errore nell'invio notifica Telegram:", error.response?.data || error.message);
+      console.error("Error sending Telegram message:", error.response?.data || error.message);
       return {
         success: false,
         error: error.response?.data?.description || error.message,
@@ -155,6 +190,7 @@ class TelegramNotifier {
       };
     }
   }
+
 }
 
 export default new TelegramNotifier();

@@ -27,16 +27,9 @@ export async function POST(req) {
       );
     }
 
-    // Invia messaggio di test
-    const testAlert = {
-      alertName: "Test Alert",
-      condition: "less_than",
-      threshold: 1.5,
-      telegramUsername: telegramUsername,
-      customMessage: testMessage || "Questo è un messaggio di test per verificare che le notifiche Telegram funzionino correttamente."
-    };
-
-    const result = await telegramNotifier.sendAlert(testAlert, 1.2, "Health Factor");
+    // Invia messaggio di test diretto
+    const message = testMessage || "✅ Connection successful! You will now receive alerts from Aave Optimizer Dashboard.";
+    const result = await telegramNotifier.sendMessageToUsername(telegramUsername, message);
 
     return NextResponse.json({
       success: true,
