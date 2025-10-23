@@ -127,9 +127,11 @@ export function getSecurityConfig() {
   config.jwt = {
     secret: process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET,
     accessTokenExpiry: 15 * 60, // 15 minutes
-    refreshTokenExpiry: 7 * 24 * 60 * 60, // 7 days
+    refreshTokenExpiry: 24 * 60 * 60, // Ridotto da 7 giorni a 1 giorno
     issuer: 'defi-dashboard',
-    audience: 'defi-dashboard-users'
+    audience: 'defi-dashboard-users',
+    algorithm: 'HS256', // Specificato algoritmo
+    clockTolerance: 30 // 30 secondi di tolleranza
   };
 
   // Rate Limiting Configuration
@@ -140,9 +142,11 @@ export function getSecurityConfig() {
       enabled: !!process.env.REDIS_URL
     },
     limits: {
-      general: { windowMs: 60000, maxRequests: 100 },
-      sensitive: { windowMs: 60000, maxRequests: 10 },
-      webhook: { windowMs: 60000, maxRequests: 50 }
+      general: { windowMs: 60000, maxRequests: 60 }, // Ridotto da 100 a 60
+      sensitive: { windowMs: 60000, maxRequests: 5 }, // Ridotto da 10 a 5
+      webhook: { windowMs: 60000, maxRequests: 30 }, // Ridotto da 50 a 30
+      auth: { windowMs: 60000, maxRequests: 3 }, // Nuovo limite per auth
+      api: { windowMs: 60000, maxRequests: 20 } // Nuovo limite per API
     }
   };
 
@@ -158,10 +162,12 @@ export function getSecurityConfig() {
   // CORS Configuration
   config.cors = {
     enabled: true,
-    origins: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+    origins: process.env.ALLOWED_ORIGINS?.split(',') || (process.env.NODE_ENV === 'development' ? ['http://localhost:3000'] : []),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    headers: ['Content-Type', 'Authorization', 'X-CSRF-Token']
+    headers: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+    maxAge: 86400, // 24 ore cache per preflight
+    optionsSuccessStatus: 200
   };
 
   // Security Headers
@@ -171,15 +177,17 @@ export function getSecurityConfig() {
       enabled: true,
       directives: {
         'default-src': ["'self'"],
-        'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-        'style-src': ["'self'", "'unsafe-inline'"],
-        'img-src': ["'self'", 'data:', 'https:'],
-        'font-src': ["'self'"],
-        'connect-src': ["'self'", 'https://api.stripe.com', 'https://api.resend.com'],
-        'frame-src': ["'self'", 'https://js.stripe.com'],
+        'script-src': ["'self'", "'nonce-{random}'", "https://js.stripe.com", "https://connect.facebook.net"],
+        'style-src': ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        'img-src': ["'self'", 'data:', 'https:', 'blob:'],
+        'font-src': ["'self'", "https://fonts.gstatic.com"],
+        'connect-src': ["'self'", 'https://api.stripe.com', 'https://api.resend.com', 'https://api.telegram.org', 'wss:', 'ws:'],
+        'frame-src': ["'self'", 'https://js.stripe.com', 'https://hooks.stripe.com'],
         'object-src': ["'none'"],
         'base-uri': ["'self'"],
-        'form-action': ["'self'"]
+        'form-action': ["'self'", 'https://checkout.stripe.com'],
+        'upgrade-insecure-requests': [],
+        'block-all-mixed-content': []
       }
     }
   };
@@ -198,14 +206,20 @@ export function getSecurityConfig() {
     retryWrites: true,
     maxPoolSize: 10,
     minPoolSize: 2,
-    maxRetryTime: 30000
+    maxRetryTime: 30000,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+    connectTimeoutMS: 10000,
+    maxIdleTimeMS: 30000,
+    authSource: 'admin' // Specifica source di autenticazione
   };
 
   // Webhook Security
   config.webhooks = {
     stripe: {
       secret: process.env.STRIPE_WEBHOOK_SECRET,
-      enabled: !!process.env.STRIPE_WEBHOOK_SECRET
+      enabled: !!process.env.STRIPE_WEBHOOK_SECRET,
+      tolerance: 300 // 5 minuti di tolleranza timestamp
     },
     resend: {
       secret: process.env.RESEND_WEBHOOK_SECRET,
@@ -213,17 +227,148 @@ export function getSecurityConfig() {
     }
   };
 
+  // Additional Security Features
+  config.security = {
+    // Password requirements
+    passwordPolicy: {
+      minLength: 12,
+      requireUppercase: true,
+      requireLowercase: true,
+      requireNumbers: true,
+      requireSpecialChars: true,
+      maxAttempts: 5,
+      lockoutDuration: 15 * 60 * 1000 // 15 minuti
+    },
+    
+    // Session security
+    session: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000 // 24 ore
+    },
+    
+    // Input validation
+    inputValidation: {
+      maxStringLength: 1000,
+      maxArrayLength: 100,
+      allowedFileTypes: ['image/jpeg', 'image/png', 'image/gif'],
+      maxFileSize: 5 * 1024 * 1024 // 5MB
+    },
+    
+    // Brute force protection
+    bruteForce: {
+      maxAttempts: 5,
+      windowMs: 15 * 60 * 1000, // 15 minuti
+      blockDuration: 30 * 60 * 1000 // 30 minuti
+    }
+  };
+
   return config;
+}
+
+/**
+ * Generate secure CSP nonce
+ * @returns {string} - Random nonce for CSP
+ */
+export function generateCSPNonce() {
+  const crypto = require('crypto');
+  return crypto.randomBytes(16).toString('base64');
+}
+
+/**
+ * Validate security configuration
+ * @returns {Object} - Validation results with security score
+ */
+export function validateSecurityConfiguration() {
+  const config = getSecurityConfig();
+  const validation = validateSecurityEnv();
+  
+  let securityScore = 0;
+  const maxScore = 100;
+  const issues = [];
+  const recommendations = [];
+  
+  // Check JWT configuration (20 points)
+  if (config.jwt.secret && config.jwt.secret.length >= 32) {
+    securityScore += 20;
+  } else {
+    issues.push('JWT secret troppo debole o mancante');
+    recommendations.push('Usa un secret di almeno 32 caratteri');
+  }
+  
+  // Check MongoDB TLS (15 points)
+  if (config.mongodb.tls) {
+    securityScore += 15;
+  } else {
+    issues.push('MongoDB TLS non abilitato');
+    recommendations.push('Abilita TLS per MongoDB');
+  }
+  
+  // Check CSP configuration (20 points)
+  if (config.headers.csp.enabled && !config.headers.csp.directives['script-src'].includes("'unsafe-eval'")) {
+    securityScore += 20;
+  } else {
+    issues.push('CSP non configurato correttamente');
+    recommendations.push('Rimuovi unsafe-eval e unsafe-inline');
+  }
+  
+  // Check rate limiting (15 points)
+  if (config.rateLimiting.enabled && config.rateLimiting.limits.sensitive.maxRequests <= 10) {
+    securityScore += 15;
+  } else {
+    issues.push('Rate limiting troppo permissivo');
+    recommendations.push('Riduci i limiti per API sensibili');
+  }
+  
+  // Check CORS (10 points)
+  if (config.cors.origins.length > 0 && !config.cors.origins.includes('*')) {
+    securityScore += 10;
+  } else {
+    issues.push('CORS troppo permissivo');
+    recommendations.push('Specifica origini esplicite');
+  }
+  
+  // Check webhook security (10 points)
+  if (config.webhooks.stripe.enabled || config.webhooks.resend.enabled) {
+    securityScore += 10;
+  } else {
+    recommendations.push('Configura webhook secrets per maggiore sicurezza');
+  }
+  
+  // Check environment validation (10 points)
+  if (validation.valid) {
+    securityScore += 10;
+  } else {
+    issues.push('Variabili d\'ambiente non configurate correttamente');
+    recommendations.push('Configura tutte le variabili richieste');
+  }
+  
+  return {
+    score: securityScore,
+    maxScore,
+    percentage: Math.round((securityScore / maxScore) * 100),
+    issues,
+    recommendations,
+    config: config,
+    validation: validation
+  };
 }
 
 /**
  * Print security configuration status
  */
 export function printSecurityStatus() {
+  const securityValidation = validateSecurityConfiguration();
   const validation = validateSecurityEnv();
   const config = getSecurityConfig();
 
   console.group('🔒 Security Configuration Status');
+  
+  // Security Score
+  const scoreColor = securityValidation.percentage >= 80 ? '🟢' : 
+                    securityValidation.percentage >= 60 ? '🟡' : '🔴';
+  console.log(`${scoreColor} Security Score: ${securityValidation.percentage}% (${securityValidation.score}/${securityValidation.maxScore})`);
   
   if (validation.valid) {
     console.log('✅ Tutte le configurazioni di sicurezza sono valide');
@@ -235,6 +380,16 @@ export function printSecurityStatus() {
   if (validation.warnings.length > 0) {
     console.log('⚠️ Avvisi:');
     validation.warnings.forEach(warning => console.warn(`  - ${warning}`));
+  }
+
+  if (securityValidation.issues.length > 0) {
+    console.log('🚨 Problemi di sicurezza:');
+    securityValidation.issues.forEach(issue => console.error(`  - ${issue}`));
+  }
+
+  if (securityValidation.recommendations.length > 0) {
+    console.log('💡 Raccomandazioni:');
+    securityValidation.recommendations.forEach(rec => console.warn(`  - ${rec}`));
   }
 
   console.log('\n📋 Configurazione attiva:');
@@ -253,5 +408,7 @@ export default {
   SECURITY_ENV_VARS,
   validateSecurityEnv,
   getSecurityConfig,
-  printSecurityStatus
+  printSecurityStatus,
+  generateCSPNonce,
+  validateSecurityConfiguration
 };

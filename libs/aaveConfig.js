@@ -49,8 +49,6 @@ export const AAVE_NETWORK_CONFIG = {
     rpcUrls: [
       getEnvVar('RPC_URL_ARBITRUM', null),
       'https://arb1.arbitrum.io/rpc',
-      'https://arbitrum-mainnet.infura.io/v3/demo',
-      'https://arbitrum-mainnet.g.alchemy.com/v2/demo',
       'https://rpc.ankr.com/arbitrum',
       'https://arbitrum.publicnode.com'
     ].filter(Boolean),

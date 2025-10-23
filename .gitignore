@@ -174,3 +174,30 @@ playwright/.cache/
 
 # Local development
 .local/
+
+# Security - Additional sensitive files
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+.secrets/
+config/secrets/
+*.secret
+*.private
+
+# API Keys and tokens (additional patterns)
+*api-key*
+*token*
+*secret*
+*credential*
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Temporary files
+*.tmp
+*.temp

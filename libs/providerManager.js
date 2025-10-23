@@ -34,10 +34,9 @@ const RPC_CONFIG = {
     symbol: "ETH",
     decimals: 18,
     explorer: "https://etherscan.io",
-    rpcUrl: getEnvVar('RPC_URL_ETHEREUM', "https://eth-mainnet.g.alchemy.com/v2/idE6XaTpL_7iDgKwvhQJl"),
+    rpcUrl: getEnvVar('RPC_URL_ETHEREUM', "https://ethereum.publicnode.com"),
     rpcUrls: [
       getEnvVar('RPC_URL_ETHEREUM', null),
-      "https://eth-mainnet.g.alchemy.com/v2/idE6XaTpL_7iDgKwvhQJl", // ✅ Funziona
       "https://ethereum.publicnode.com", // ✅ Funziona
       "https://rpc.ankr.com/eth", // ✅ Funziona
       "https://eth.llamarpc.com", // ✅ Funziona
@@ -56,7 +55,6 @@ const RPC_CONFIG = {
     rpcUrls: [
       getEnvVar('RPC_URL_POLYGON', null),
       "https://polygon-rpc.com",
-      "https://polygon-mainnet.g.alchemy.com/v2/demo",
       "https://rpc.ankr.com/polygon"
     ].filter(Boolean),
     nativeCurrency: { name: "Polygon", symbol: "MATIC", decimals: 18 }
@@ -72,7 +70,6 @@ const RPC_CONFIG = {
     rpcUrls: [
       getEnvVar('RPC_URL_OPTIMISM', null),
       "https://mainnet.optimism.io",
-      "https://opt-mainnet.g.alchemy.com/v2/demo",
       "https://rpc.ankr.com/optimism"
     ].filter(Boolean),
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }
@@ -88,8 +85,6 @@ const RPC_CONFIG = {
     rpcUrls: [
       getEnvVar('RPC_URL_ARBITRUM', null),
       "https://arb1.arbitrum.io/rpc",
-      "https://arbitrum-mainnet.infura.io/v3/demo",
-      "https://arbitrum-mainnet.g.alchemy.com/v2/demo",
       "https://rpc.ankr.com/arbitrum",
       "https://arbitrum.publicnode.com"
     ].filter(Boolean),
@@ -106,7 +101,6 @@ const RPC_CONFIG = {
     rpcUrls: [
       getEnvVar('RPC_URL_AVALANCHE', null),
       "https://api.avax.network/ext/bc/C/rpc",
-      "https://avalanche-mainnet.infura.io/v3/demo",
       "https://rpc.ankr.com/avalanche"
     ].filter(Boolean),
     nativeCurrency: { name: "Avalanche", symbol: "AVAX", decimals: 18 }
@@ -122,7 +116,6 @@ const RPC_CONFIG = {
     rpcUrls: [
       getEnvVar('RPC_URL_BASE', null),
       "https://mainnet.base.org",
-      "https://base-mainnet.g.alchemy.com/v2/demo",
       "https://rpc.ankr.com/base"
     ].filter(Boolean),
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }
